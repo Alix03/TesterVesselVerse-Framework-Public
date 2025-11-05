@@ -5,7 +5,7 @@ import numpy as np
 import nibabel as nib
 
 sys.path.append(str(Path(__file__).parent.parent))
-from src.model_config.model_config import registry, ModelConfig
+from src.model_config.model_config import model_registry, ModelConfig
 
 class NumpyJSONEncoder(json.JSONEncoder):
     """Custom JSON encoder for NumPy types."""
@@ -109,7 +109,7 @@ class MetadataGenerator:
         """Generate metadata for all registered models."""
         self.metadata_dir.mkdir(exist_ok=True)
         
-        for model_config in registry.models.values():
+        for model_config in model_registry.models.values():
             if model_config.name == 'ExpertAnnotations':
                 continue
             self.process_directory(model_config)

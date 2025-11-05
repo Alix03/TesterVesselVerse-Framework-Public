@@ -6,13 +6,13 @@ from typing import Tuple
 from datetime import datetime
 
 sys.path.append(str(Path(__file__).parent.parent))
-from src.model_config.model_config import registry
+from src.model_config.model_config import model_registry
 
 class SetupTester:
     def __init__(self):
         self.project_root = Path.cwd()
         self.test_results = []
-        self.required_dirs = [model.name for model in registry.models.values()]
+        self.required_dirs = [model.name for model in model_registry.models.values()]
 
     def test_directory_structure(self) -> bool:
         missing_dirs = []

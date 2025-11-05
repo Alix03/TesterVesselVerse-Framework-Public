@@ -67,6 +67,7 @@ datasets/
 # Slicer specific
 *.mrml
 *.mrb
+Slicer_*.log
 
 # Service account credentials (security)
 *service-account*.json
