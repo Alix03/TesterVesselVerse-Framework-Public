@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Load Config
-config_path="$(dirname "$(dirname "$(dirname "$(realpath "$0")")")")/config.sh"
+config_path="$(dirname "$(dirname "$(realpath "$0")")")/config.sh"
 
 if [ ! -f "$config_path" ]; then
     echo "Config file not found: $config_path"

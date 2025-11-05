@@ -58,7 +58,7 @@ class DatasetRegistry:
         ixi_config = DatasetConfig(
             name="IXI",
             unique_name="IXI",
-            base_path=Path("../VesselVerse-Framework/VESSELVERSE_DATA_IXI/data"),
+            base_path=Path("../../VESSELVERSE_DATA_IXI/data"),
             image_dir="IXI_TOT",
             image_suffix="nii.gz",
             modality="MR",

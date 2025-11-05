@@ -1,13 +1,23 @@
 #!/bin/bash
 
-CONFIG_FILE="$(dirname "$(dirname "$(dirname "$(realpath "$0")")")")/VesselVerse-Framework/config.sh"
+CONFIG_FILE="$(dirname "$(dirname "$(realpath "$0")")")/config.sh"
 
 if [[ -f "$CONFIG_FILE" ]]; then
     source "$CONFIG_FILE"
 else
     echo "Configuration file $CONFIG_FILE not found!"
-    echo "(Complete path: $(realpath "$CONFIG_FILE"))"
-    exit 1
+    echo "Searching for config.sh in project root..."
+    
+    # Try alternative path (in case script is called from different location)
+    ALT_CONFIG="$(cd "$(dirname "$0")/.." && pwd)/config.sh"
+    if [[ -f "$ALT_CONFIG" ]]; then
+        CONFIG_FILE="$ALT_CONFIG"
+        source "$CONFIG_FILE"
+        echo "Found config.sh at: $CONFIG_FILE"
+    else
+        echo "Could not find config.sh. Please ensure it exists in the project root."
+        exit 1
+    fi
 fi
 
 MODULE_PATH="$(dirname "$(dirname "$(realpath "$0")")")/src/slicer_extension/VesselVerse"

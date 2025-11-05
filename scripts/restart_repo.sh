@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Load Config
-config_path="$(dirname "$(dirname "$(dirname "$(realpath "$0")")")")/config.sh"
+config_path="$(dirname "$(dirname "$(realpath "$0")")")/config.sh"
 
 if [ ! -f "$config_path" ]; then
     echo "Config file not found: $config_path"
@@ -22,7 +22,7 @@ then
 fi
 
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-VV_MODULE_DIR="$(dirname "$(dirname "$(dirname "$(realpath "$0")")")")/VesselverseModule"
+VV_MODULE_DIR="$(dirname "$(dirname "$(realpath "$0")")")/src/slicer_extension/VesselVerse"
 
 cd "$(dirname "$(dirname "$(realpath "$0")")")"
 cd datasets/D-$DATASET_NAME
