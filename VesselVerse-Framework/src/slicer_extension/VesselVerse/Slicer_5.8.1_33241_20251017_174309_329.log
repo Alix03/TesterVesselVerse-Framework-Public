@@ -1,0 +1,249 @@
+[DEBUG][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Session start time .......: 20251017_174309
+[DEBUG][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Slicer version ...........: 5.8.1 (revision 33241 / 11eaf62) macosx-amd64 - installed release
+[DEBUG][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Operating system .........: macOS / 13.2.1 / 22D68 / UTF-8 - 64-bit
+[DEBUG][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Memory ...................: 8192 MB physical, 4096 MB virtual
+[DEBUG][Qt] 17.10.2025 17:43:09 [] (unknown:0) - CPU ......................:  Apple M2, 8 cores, 8 logical processors
+[DEBUG][Qt] 17.10.2025 17:43:09 [] (unknown:0) - VTK configuration ........: OpenGL2 rendering, TBB threading
+[DEBUG][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Qt configuration .........: version 5.15.8, with SSL, requested OpenGL 3.2 (core profile)
+[DEBUG][Qt] 17.10.2025 17:43:09 [] (unknown:0) - DCMTK configuration ......: version 3.6.8, no SSL
+[DEBUG][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Internationalization .....: disabled, language=
+[DEBUG][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Developer mode ...........: disabled
+[DEBUG][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Application path .........: /Applications/Slicer.app/Contents/MacOS
+[DEBUG][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Additional module paths ..: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/src/slicer_extension/VesselVerse
+[WARNING][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Error #1 while writing setting "Modules/AdditionalPaths"
+[WARNING][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Error #1 while writing setting "Modules/IgnoreModules"
+[WARNING][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Error #1 while writing setting "Extensions/ManagerEnabled"
+[WARNING][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Error #1 while writing setting "Extensions/ServerUrl"
+[WARNING][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Error #1 while writing setting "Extensions/FrontendServerUrl"
+[WARNING][Qt] 17.10.2025 17:43:09 [] (unknown:0) - Error #1 while writing setting "Extensions/InstallPath"
+[CRITICAL][Stream] 17.10.2025 17:43:12 [] (unknown:0) - TypeError: module() argument 'name' must be str, not qSlicerScriptedLoadableModule
+[CRITICAL][Qt] 17.10.2025 17:43:12 [] (unknown:0) - qSlicerPythonCppAPI::instantiateClass  - [ "__init__" ] - Failed to instantiate scripted pythonqt class "__init__" 0x1a21e9dc0
+[CRITICAL][Qt] 17.10.2025 17:43:12 [] (unknown:0) - Fail to instantiate module  "__init__"
+[CRITICAL][Qt] 17.10.2025 17:43:12 [] (unknown:0) - The following modules failed to be instantiated:
+[CRITICAL][Qt] 17.10.2025 17:43:12 [] (unknown:0) -    __init__
+[DEBUG][Python] 17.10.2025 17:43:13 [Python] (/Applications/Slicer.app/Contents/lib/Slicer-5.8/qt-scripted-modules/SubjectHierarchyPlugins/AbstractScriptedSubjectHierarchyPlugin.py:40) - Scripted subject hierarchy plugin registered: SegmentEditor
+[DEBUG][Python] 17.10.2025 17:43:13 [Python] (/Applications/Slicer.app/Contents/lib/Slicer-5.8/qt-scripted-modules/SubjectHierarchyPlugins/AbstractScriptedSubjectHierarchyPlugin.py:40) - Scripted subject hierarchy plugin registered: SegmentStatistics
+[DEBUG][Qt] 17.10.2025 17:43:13 [] (unknown:0) - Switch to module:  "Welcome"
+[DEBUG][Qt] 17.10.2025 17:43:14 [] (unknown:0) - Switch to module:  "VesselVerse"
+[INFO][Stream] 17.10.2025 17:43:14 [] (unknown:0) - Reload and Test Panel not found: ignoring this step
+[INFO][Stream] 17.10.2025 17:43:14 [] (unknown:0) - Available datasets: ['IXI', '301_CT23', '302_MR23', '303_CT24', '304_MR24', 'IXI_COSTA']
+[INFO][Stream] 17.10.2025 17:43:22 [] (unknown:0) - Selected Dataset: IXI
+[INFO][Stream] 17.10.2025 17:43:22 [] (unknown:0) - Base Path: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data
+[INFO][Stream] 17.10.2025 17:43:22 [] (unknown:0) - LOADING PATH: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/IXI_TOT
+[INFO][Stream] 17.10.2025 17:43:22 [] (unknown:0) - LOADING PATH: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/STAPLE
+[INFO][Stream] 17.10.2025 17:43:22 [] (unknown:0) - LOADING PATH: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/STAPLE_base
+[INFO][Stream] 17.10.2025 17:43:22 [] (unknown:0) - LOADING PATH: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/StochasticAL
+[INFO][Stream] 17.10.2025 17:43:22 [] (unknown:0) - LOADING PATH: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/nnUNet
+[INFO][Stream] 17.10.2025 17:43:22 [] (unknown:0) - LOADING PATH: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/A2V
+[INFO][Stream] 17.10.2025 17:43:22 [] (unknown:0) - LOADING PATH: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/Filtering
+[INFO][Stream] 17.10.2025 17:43:22 [] (unknown:0) - LOADING PATH: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/ExpertAnnotations
+[INFO][Stream] 17.10.2025 17:43:22 [] (unknown:0) - LOADING PATH: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/ExpertVAL
+[INFO][Stream] 17.10.2025 17:43:22 [] (unknown:0) - Dataset updated to: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data
+[CRITICAL][FD] 17.10.2025 17:43:28 [] (unknown:0) - 2025-10-17 17:43:28.915 Slicer[41345:344930] +[CATransaction synchronize] called within transaction
+[DEBUG][Qt] 17.10.2025 17:43:34 [] (unknown:0) - "Volume" Reader has successfully read the file "/Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/IXI_TOT/IXI002-Guys-0828-MRA.nii.gz" "[0.55s]"
+[INFO][Stream] 17.10.2025 17:43:39 [] (unknown:0) - Error loading segmentation: nnUNet segmentation not found: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/nnUNet/IXI002-Guys-0828.nii.gz
+[INFO][Stream] 17.10.2025 17:43:39 [] (unknown:0) - Traceback: Traceback (most recent call last):
+[INFO][Stream] 17.10.2025 17:43:39 [] (unknown:0) -   File "/Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/src/slicer_extension/VesselVerse/VesselVerse.py", line 953, in loadSegmentationW
+[INFO][Stream] 17.10.2025 17:43:39 [] (unknown:0) -     segPath = self.logic.dataset.get_model_path(imagePath, modelType)
+[INFO][Stream] 17.10.2025 17:43:39 [] (unknown:0) -   File "/Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/src/slicer_extension/VesselVerse/VesselVerse.py", line 1822, in get_model_path
+[INFO][Stream] 17.10.2025 17:43:39 [] (unknown:0) -     raise FileNotFoundError(f'{model_name} segmentation not found: {model_path}')
+[INFO][Stream] 17.10.2025 17:43:39 [] (unknown:0) - FileNotFoundError: nnUNet segmentation not found: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/nnUNet/IXI002-Guys-0828.nii.gz
+[INFO][Stream] 17.10.2025 17:43:39 [] (unknown:0) -
+[INFO][Stream] 17.10.2025 17:43:53 [] (unknown:0) - Error loading segmentation: nnUNet segmentation not found: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/nnUNet/IXI002-Guys-0828.nii.gz
+[INFO][Stream] 17.10.2025 17:43:53 [] (unknown:0) - Traceback: Traceback (most recent call last):
+[INFO][Stream] 17.10.2025 17:43:53 [] (unknown:0) -   File "/Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/src/slicer_extension/VesselVerse/VesselVerse.py", line 953, in loadSegmentationW
+[INFO][Stream] 17.10.2025 17:43:53 [] (unknown:0) -     segPath = self.logic.dataset.get_model_path(imagePath, modelType)
+[INFO][Stream] 17.10.2025 17:43:53 [] (unknown:0) -   File "/Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/src/slicer_extension/VesselVerse/VesselVerse.py", line 1822, in get_model_path
+[INFO][Stream] 17.10.2025 17:43:53 [] (unknown:0) -     raise FileNotFoundError(f'{model_name} segmentation not found: {model_path}')
+[INFO][Stream] 17.10.2025 17:43:53 [] (unknown:0) - FileNotFoundError: nnUNet segmentation not found: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/nnUNet/IXI002-Guys-0828.nii.gz
+[INFO][Stream] 17.10.2025 17:43:53 [] (unknown:0) -
+[CRITICAL][FD] 17.10.2025 17:44:17 [] (unknown:0) - 2025-10-17 17:44:17.381 Slicer[41345:344930] +[CATransaction synchronize] called within transaction
+[INFO][Stream] 17.10.2025 17:44:32 [] (unknown:0) - Error loading segmentation: nnUNet segmentation not found: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/nnUNet/IXI002-Guys-0828.nii.gz
+[INFO][Stream] 17.10.2025 17:44:32 [] (unknown:0) - Traceback: Traceback (most recent call last):
+[INFO][Stream] 17.10.2025 17:44:32 [] (unknown:0) -   File "/Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/src/slicer_extension/VesselVerse/VesselVerse.py", line 953, in loadSegmentationW
+[INFO][Stream] 17.10.2025 17:44:32 [] (unknown:0) -     segPath = self.logic.dataset.get_model_path(imagePath, modelType)
+[INFO][Stream] 17.10.2025 17:44:32 [] (unknown:0) -   File "/Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/src/slicer_extension/VesselVerse/VesselVerse.py", line 1822, in get_model_path
+[INFO][Stream] 17.10.2025 17:44:32 [] (unknown:0) -     raise FileNotFoundError(f'{model_name} segmentation not found: {model_path}')
+[INFO][Stream] 17.10.2025 17:44:32 [] (unknown:0) - FileNotFoundError: nnUNet segmentation not found: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/nnUNet/IXI002-Guys-0828.nii.gz
+[INFO][Stream] 17.10.2025 17:44:32 [] (unknown:0) -
+[INFO][VTK] 17.10.2025 17:45:05 [vtkMRMLSegmentationStorageNode (0x7fe068880a30)] (/D/S/S-0/Libs/MRML/Core/vtkMRMLSegmentationStorageNode.cxx:630) - ReferenceImageExtentOffset attribute was not found in NRRD segmentation file. Assume no offset.
+[DEBUG][Qt] 17.10.2025 17:45:05 [] (unknown:0) - "Segmentation" Reader has successfully read the file "/Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/nnUNet/IXI002-Guys-0828.nii.gz" "[0.29s]"
+[INFO][Stream] 17.10.2025 17:45:06 [] (unknown:0) - Segmentation loaded: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/nnUNet/IXI002-Guys-0828.nii.gz
+[INFO][Stream] 17.10.2025 17:45:06 [] (unknown:0) - Updating history for /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/nnUNet/IXI002-Guys-0828.nii.gz
+[INFO][Stream] 17.10.2025 17:45:06 [] (unknown:0) - Current path: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/nnUNet/IXI002-Guys-0828.nii.gz
+[INFO][Stream] 17.10.2025 17:45:06 [] (unknown:0) - Current path HISTORY: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/nnUNet/IXI002-Guys-0828.nii.gz
+[INFO][Stream] 17.10.2025 17:45:06 [] (unknown:0) - Error: Metadata not found for /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/nnUNet/IXI002-Guys-0828.nii.gz
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 1   HIToolbox                           0x00007ff814f9b726 _ZN15MenuBarInstance22EnsureAutoShowObserverEv + 102
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 2   HIToolbox                           0x00007ff814f9b2b8 _ZN15MenuBarInstance14EnableAutoShowEv + 52
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 3   HIToolbox                           0x00007ff814f0acd7 _ZN15MenuBarInstance21UpdateAggregateUIModeE21MenuBarAnimationStylehhh + 1113
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 4   HIToolbox                           0x00007ff814f9b173 _ZN15MenuBarInstance19SetFullScreenUIModeEjj + 175
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 5   AppKit                              0x00007ff80e45e287 -[NSApplication _setPresentationOptions:instance:flags:] + 1145
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 6   AppKit                              0x00007ff80e2b3055 -[NSApplication _updateFullScreenPresentationOptionsForInstance:] + 582
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 7   CoreFoundation                      0x00007ff80b08d6c6 __CFNOTIFICATIONCENTER_IS_CALLING_OUT_TO_AN_OBSERVER__ + 137
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 8   CoreFoundation                      0x00007ff80b126cac ___CFXRegistrationPost_block_invoke + 86
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 9   CoreFoundation                      0x00007ff80b126c03 _CFXRegistrationPost + 534
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 10  CoreFoundation                      0x00007ff80b060e21 _CFXNotificationPost + 809
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 11  Foundation                          0x00007ff80bdd7abc -[NSNotificationCenter postNotificationName:object:userInfo:] + 82
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 12  AppKit                              0x00007ff80e45e8f8 spacesNotificationHandler + 119
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 13  SkyLight                            0x00007ff80fbff23d _ZN12_GLOBAL__N_123notify_datagram_handlerEj15CGSDatagramTypePvmS1_ + 1030
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 14  SkyLight                            0x00007ff80ff1205a _ZN21CGSDatagramReadStream26dispatchMainQueueDatagramsEv + 202
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 15  SkyLight                            0x00007ff80ff11f81 ___ZN21CGSDatagramReadStream15mainQueueWakeupEv_block_invoke + 18
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 16  libdispatch.dylib                   0x00007ff80ae3c7fb _dispatch_call_block_and_release + 12
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 17  libdispatch.dylib                   0x00007ff80ae3da44 _dispatch_client_callout + 8
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 18  libdispatch.dylib                   0x00007ff80ae4a7b9 _dispatch_main_queue_drain + 952
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 19  libdispatch.dylib                   0x00007ff80ae4a3f3 _dispatch_main_queue_callback_4CF + 31
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 20  CoreFoundation                      0x00007ff80b0d642d __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ + 9
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 21  CoreFoundation                      0x00007ff80b096ebb __CFRunLoopRun + 2498
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 22  CoreFoundation                      0x00007ff80b095e7f CFRunLoopRunSpecific + 560
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 23  HIToolbox                           0x00007ff814f28766 RunCurrentEventLoopInMode + 292
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 24  HIToolbox                           0x00007ff814f28576 ReceiveNextEventCommon + 679
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 25  HIToolbox                           0x00007ff814f282b3 _BlockUntilNextEventMatchingListInModeWithFilter + 70
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 26  AppKit                              0x00007ff80e1212f3 _DPSNextEvent + 909
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 27  AppKit                              0x00007ff80e120174 -[NSApplication(NSEvent) _nextEventMatchingEventMask:untilDate:inMode:dequeue:] + 1219
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 28  AppKit                              0x00007ff80e1127b7 -[NSApplication run] + 586
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 29  libqcocoa.dylib                     0x0000000146c8a4d3 qt_plugin_instance + 188259
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 30  QtCore                              0x0000000111f900e6 _ZN10QEventLoop4execE6QFlagsINS_17ProcessEventsFlagEE + 502
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 31  QtCore                              0x0000000111f940b2 _ZN16QCoreApplication4execEv + 130
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 32  libqSlicerBaseQTCore.dylib          0x000000010ec949e9 _ZN22qSlicerCoreApplication4execEv + 9
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 33  Slicer                              0x0000000104d0f3f9 main + 505
+[CRITICAL][FD] 17.10.2025 17:45:09 [] (unknown:0) - 34  dyld                                0x0000000204eb8310 start + 2432
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 1   HIToolbox                           0x00007ff814f280c2 _ZN15MenuBarInstance22RemoveAutoShowObserverEv + 30
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 2   HIToolbox                           0x00007ff814f64638 _ZL17BroadcastInternaljPvh + 167
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 3   SkyLight                            0x00007ff80fbff23d _ZN12_GLOBAL__N_123notify_datagram_handlerEj15CGSDatagramTypePvmS1_ + 1030
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 4   SkyLight                            0x00007ff80ff1205a _ZN21CGSDatagramReadStream26dispatchMainQueueDatagramsEv + 202
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 5   SkyLight                            0x00007ff80ff11f81 ___ZN21CGSDatagramReadStream15mainQueueWakeupEv_block_invoke + 18
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 6   libdispatch.dylib                   0x00007ff80ae3c7fb _dispatch_call_block_and_release + 12
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 7   libdispatch.dylib                   0x00007ff80ae3da44 _dispatch_client_callout + 8
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 8   libdispatch.dylib                   0x00007ff80ae4a7b9 _dispatch_main_queue_drain + 952
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 9   libdispatch.dylib                   0x00007ff80ae4a3f3 _dispatch_main_queue_callback_4CF + 31
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 10  CoreFoundation                      0x00007ff80b0d642d __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ + 9
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 11  CoreFoundation                      0x00007ff80b096ebb __CFRunLoopRun + 2498
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 12  CoreFoundation                      0x00007ff80b095e7f CFRunLoopRunSpecific + 560
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 13  HIToolbox                           0x00007ff814f28766 RunCurrentEventLoopInMode + 292
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 14  HIToolbox                           0x00007ff814f28576 ReceiveNextEventCommon + 679
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 15  HIToolbox                           0x00007ff814f282b3 _BlockUntilNextEventMatchingListInModeWithFilter + 70
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 16  AppKit                              0x00007ff80e1212f3 _DPSNextEvent + 909
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 17  AppKit                              0x00007ff80e120174 -[NSApplication(NSEvent) _nextEventMatchingEventMask:untilDate:inMode:dequeue:] + 1219
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 18  AppKit                              0x00007ff80e1127b7 -[NSApplication run] + 586
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 19  libqcocoa.dylib                     0x0000000146c8a4d3 qt_plugin_instance + 188259
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 20  QtCore                              0x0000000111f900e6 _ZN10QEventLoop4execE6QFlagsINS_17ProcessEventsFlagEE + 502
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 21  QtCore                              0x0000000111f940b2 _ZN16QCoreApplication4execEv + 130
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 22  libqSlicerBaseQTCore.dylib          0x000000010ec949e9 _ZN22qSlicerCoreApplication4execEv + 9
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 23  Slicer                              0x0000000104d0f3f9 main + 505
+[CRITICAL][FD] 17.10.2025 17:45:56 [] (unknown:0) - 24  dyld                                0x0000000204eb8310 start + 2432
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 1   HIToolbox                           0x00007ff814f9b726 _ZN15MenuBarInstance22EnsureAutoShowObserverEv + 102
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 2   HIToolbox                           0x00007ff814f64638 _ZL17BroadcastInternaljPvh + 167
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 3   SkyLight                            0x00007ff80fbff23d _ZN12_GLOBAL__N_123notify_datagram_handlerEj15CGSDatagramTypePvmS1_ + 1030
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 4   SkyLight                            0x00007ff80ff1205a _ZN21CGSDatagramReadStream26dispatchMainQueueDatagramsEv + 202
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 5   SkyLight                            0x00007ff80ff11f81 ___ZN21CGSDatagramReadStream15mainQueueWakeupEv_block_invoke + 18
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 6   libdispatch.dylib                   0x00007ff80ae3c7fb _dispatch_call_block_and_release + 12
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 7   libdispatch.dylib                   0x00007ff80ae3da44 _dispatch_client_callout + 8
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 8   libdispatch.dylib                   0x00007ff80ae4a7b9 _dispatch_main_queue_drain + 952
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 9   libdispatch.dylib                   0x00007ff80ae4a3f3 _dispatch_main_queue_callback_4CF + 31
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 10  CoreFoundation                      0x00007ff80b0d642d __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ + 9
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 11  CoreFoundation                      0x00007ff80b096ebb __CFRunLoopRun + 2498
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 12  CoreFoundation                      0x00007ff80b095e7f CFRunLoopRunSpecific + 560
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 13  HIToolbox                           0x00007ff814f28766 RunCurrentEventLoopInMode + 292
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 14  HIToolbox                           0x00007ff814f28576 ReceiveNextEventCommon + 679
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 15  HIToolbox                           0x00007ff814f282b3 _BlockUntilNextEventMatchingListInModeWithFilter + 70
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 16  AppKit                              0x00007ff80e1212f3 _DPSNextEvent + 909
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 17  AppKit                              0x00007ff80e120174 -[NSApplication(NSEvent) _nextEventMatchingEventMask:untilDate:inMode:dequeue:] + 1219
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 18  AppKit                              0x00007ff80e1127b7 -[NSApplication run] + 586
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 19  libqcocoa.dylib                     0x0000000146c8a4d3 qt_plugin_instance + 188259
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 20  QtCore                              0x0000000111f900e6 _ZN10QEventLoop4execE6QFlagsINS_17ProcessEventsFlagEE + 502
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 21  QtCore                              0x0000000111f940b2 _ZN16QCoreApplication4execEv + 130
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 22  libqSlicerBaseQTCore.dylib          0x000000010ec949e9 _ZN22qSlicerCoreApplication4execEv + 9
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 23  Slicer                              0x0000000104d0f3f9 main + 505
+[CRITICAL][FD] 17.10.2025 17:46:03 [] (unknown:0) - 24  dyld                                0x0000000204eb8310 start + 2432
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 1   HIToolbox                           0x00007ff814f280c2 _ZN15MenuBarInstance22RemoveAutoShowObserverEv + 30
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 2   HIToolbox                           0x00007ff814f0ace3 _ZN15MenuBarInstance21UpdateAggregateUIModeE21MenuBarAnimationStylehhh + 1125
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 3   HIToolbox                           0x00007ff814f0a7a4 _ZN15MenuBarInstance16ForEachMenuBarDoEU13block_pointerFvPS_E + 46
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 4   HIToolbox                           0x00007ff814f0a762 SetSystemUIMode + 209
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 5   AppKit                              0x00007ff80e45e293 -[NSApplication _setPresentationOptions:instance:flags:] + 1157
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 6   AppKit                              0x00007ff80e2b3075 -[NSApplication _updateFullScreenPresentationOptionsForInstance:] + 614
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 7   CoreFoundation                      0x00007ff80b08d6c6 __CFNOTIFICATIONCENTER_IS_CALLING_OUT_TO_AN_OBSERVER__ + 137
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 8   CoreFoundation                      0x00007ff80b126cac ___CFXRegistrationPost_block_invoke + 86
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 9   CoreFoundation                      0x00007ff80b126c03 _CFXRegistrationPost + 534
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 10  CoreFoundation                      0x00007ff80b060e21 _CFXNotificationPost + 809
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 11  Foundation                          0x00007ff80bdd7abc -[NSNotificationCenter postNotificationName:object:userInfo:] + 82
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 12  AppKit                              0x00007ff80e45e8f8 spacesNotificationHandler + 119
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 13  SkyLight                            0x00007ff80fbff23d _ZN12_GLOBAL__N_123notify_datagram_handlerEj15CGSDatagramTypePvmS1_ + 1030
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 14  SkyLight                            0x00007ff80ff1205a _ZN21CGSDatagramReadStream26dispatchMainQueueDatagramsEv + 202
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 15  SkyLight                            0x00007ff80ff11f81 ___ZN21CGSDatagramReadStream15mainQueueWakeupEv_block_invoke + 18
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 16  libdispatch.dylib                   0x00007ff80ae3c7fb _dispatch_call_block_and_release + 12
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 17  libdispatch.dylib                   0x00007ff80ae3da44 _dispatch_client_callout + 8
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 18  libdispatch.dylib                   0x00007ff80ae4a7b9 _dispatch_main_queue_drain + 952
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 19  libdispatch.dylib                   0x00007ff80ae4a3f3 _dispatch_main_queue_callback_4CF + 31
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 20  CoreFoundation                      0x00007ff80b0d642d __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ + 9
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 21  CoreFoundation                      0x00007ff80b096ebb __CFRunLoopRun + 2498
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 22  CoreFoundation                      0x00007ff80b095e7f CFRunLoopRunSpecific + 560
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 23  HIToolbox                           0x00007ff814f28766 RunCurrentEventLoopInMode + 292
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 24  HIToolbox                           0x00007ff814f28576 ReceiveNextEventCommon + 679
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 25  HIToolbox                           0x00007ff814f282b3 _BlockUntilNextEventMatchingListInModeWithFilter + 70
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 26  AppKit                              0x00007ff80e1212f3 _DPSNextEvent + 909
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 27  AppKit                              0x00007ff80e120174 -[NSApplication(NSEvent) _nextEventMatchingEventMask:untilDate:inMode:dequeue:] + 1219
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 28  AppKit                              0x00007ff80e1127b7 -[NSApplication run] + 586
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 29  libqcocoa.dylib                     0x0000000146c8a4d3 qt_plugin_instance + 188259
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 30  QtCore                              0x0000000111f900e6 _ZN10QEventLoop4execE6QFlagsINS_17ProcessEventsFlagEE + 502
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 31  QtCore                              0x0000000111f940b2 _ZN16QCoreApplication4execEv + 130
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 32  libqSlicerBaseQTCore.dylib          0x000000010ec949e9 _ZN22qSlicerCoreApplication4execEv + 9
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 33  Slicer                              0x0000000104d0f3f9 main + 505
+[CRITICAL][FD] 17.10.2025 17:46:39 [] (unknown:0) - 34  dyld                                0x0000000204eb8310 start + 2432
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 1   HIToolbox                           0x00007ff814f9b726 _ZN15MenuBarInstance22EnsureAutoShowObserverEv + 102
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 2   HIToolbox                           0x00007ff814f64638 _ZL17BroadcastInternaljPvh + 167
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 3   SkyLight                            0x00007ff80fbff23d _ZN12_GLOBAL__N_123notify_datagram_handlerEj15CGSDatagramTypePvmS1_ + 1030
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 4   SkyLight                            0x00007ff80ff1205a _ZN21CGSDatagramReadStream26dispatchMainQueueDatagramsEv + 202
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 5   SkyLight                            0x00007ff80ff11f81 ___ZN21CGSDatagramReadStream15mainQueueWakeupEv_block_invoke + 18
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 6   libdispatch.dylib                   0x00007ff80ae3c7fb _dispatch_call_block_and_release + 12
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 7   libdispatch.dylib                   0x00007ff80ae3da44 _dispatch_client_callout + 8
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 8   libdispatch.dylib                   0x00007ff80ae4a7b9 _dispatch_main_queue_drain + 952
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 9   libdispatch.dylib                   0x00007ff80ae4a3f3 _dispatch_main_queue_callback_4CF + 31
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 10  CoreFoundation                      0x00007ff80b0d642d __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ + 9
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 11  CoreFoundation                      0x00007ff80b096ebb __CFRunLoopRun + 2498
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 12  CoreFoundation                      0x00007ff80b095e7f CFRunLoopRunSpecific + 560
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 13  HIToolbox                           0x00007ff814f28766 RunCurrentEventLoopInMode + 292
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 14  HIToolbox                           0x00007ff814f28576 ReceiveNextEventCommon + 679
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 15  HIToolbox                           0x00007ff814f282b3 _BlockUntilNextEventMatchingListInModeWithFilter + 70
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 16  AppKit                              0x00007ff80e1212f3 _DPSNextEvent + 909
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 17  AppKit                              0x00007ff80e120174 -[NSApplication(NSEvent) _nextEventMatchingEventMask:untilDate:inMode:dequeue:] + 1219
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 18  AppKit                              0x00007ff80e1127b7 -[NSApplication run] + 586
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 19  libqcocoa.dylib                     0x0000000146c8a4d3 qt_plugin_instance + 188259
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 20  QtCore                              0x0000000111f900e6 _ZN10QEventLoop4execE6QFlagsINS_17ProcessEventsFlagEE + 502
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 21  QtCore                              0x0000000111f940b2 _ZN16QCoreApplication4execEv + 130
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 22  libqSlicerBaseQTCore.dylib          0x000000010ec949e9 _ZN22qSlicerCoreApplication4execEv + 9
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 23  Slicer                              0x0000000104d0f3f9 main + 505
+[CRITICAL][FD] 17.10.2025 17:46:42 [] (unknown:0) - 24  dyld                                0x0000000204eb8310 start + 2432
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 1   HIToolbox                           0x00007ff814f280c2 _ZN15MenuBarInstance22RemoveAutoShowObserverEv + 30
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 2   HIToolbox                           0x00007ff814f0ace3 _ZN15MenuBarInstance21UpdateAggregateUIModeE21MenuBarAnimationStylehhh + 1125
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 3   HIToolbox                           0x00007ff814f0a7a4 _ZN15MenuBarInstance16ForEachMenuBarDoEU13block_pointerFvPS_E + 46
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 4   HIToolbox                           0x00007ff814f0a762 SetSystemUIMode + 209
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 5   AppKit                              0x00007ff80e45e293 -[NSApplication _setPresentationOptions:instance:flags:] + 1157
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 6   AppKit                              0x00007ff80e2b3075 -[NSApplication _updateFullScreenPresentationOptionsForInstance:] + 614
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 7   CoreFoundation                      0x00007ff80b08d6c6 __CFNOTIFICATIONCENTER_IS_CALLING_OUT_TO_AN_OBSERVER__ + 137
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 8   CoreFoundation                      0x00007ff80b126cac ___CFXRegistrationPost_block_invoke + 86
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 9   CoreFoundation                      0x00007ff80b126c03 _CFXRegistrationPost + 534
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 10  CoreFoundation                      0x00007ff80b060e21 _CFXNotificationPost + 809
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 11  Foundation                          0x00007ff80bdd7abc -[NSNotificationCenter postNotificationName:object:userInfo:] + 82
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 12  AppKit                              0x00007ff80e45e8f8 spacesNotificationHandler + 119
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 13  SkyLight                            0x00007ff80fbff23d _ZN12_GLOBAL__N_123notify_datagram_handlerEj15CGSDatagramTypePvmS1_ + 1030
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 14  SkyLight                            0x00007ff80ff1205a _ZN21CGSDatagramReadStream26dispatchMainQueueDatagramsEv + 202
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 15  SkyLight                            0x00007ff80ff11f81 ___ZN21CGSDatagramReadStream15mainQueueWakeupEv_block_invoke + 18
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 16  libdispatch.dylib                   0x00007ff80ae3c7fb _dispatch_call_block_and_release + 12
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 17  libdispatch.dylib                   0x00007ff80ae3da44 _dispatch_client_callout + 8
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 18  libdispatch.dylib                   0x00007ff80ae4a7b9 _dispatch_main_queue_drain + 952
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 19  libdispatch.dylib                   0x00007ff80ae4a3f3 _dispatch_main_queue_callback_4CF + 31
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 20  CoreFoundation                      0x00007ff80b0d642d __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ + 9
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 21  CoreFoundation                      0x00007ff80b096ebb __CFRunLoopRun + 2498
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 22  CoreFoundation                      0x00007ff80b095e7f CFRunLoopRunSpecific + 560
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 23  HIToolbox                           0x00007ff814f28766 RunCurrentEventLoopInMode + 292
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 24  HIToolbox                           0x00007ff814f28576 ReceiveNextEventCommon + 679
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 25  HIToolbox                           0x00007ff814f282b3 _BlockUntilNextEventMatchingListInModeWithFilter + 70
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 26  AppKit                              0x00007ff80e1212f3 _DPSNextEvent + 909
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 27  AppKit                              0x00007ff80e120174 -[NSApplication(NSEvent) _nextEventMatchingEventMask:untilDate:inMode:dequeue:] + 1219
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 28  AppKit                              0x00007ff80e1127b7 -[NSApplication run] + 586
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 29  libqcocoa.dylib                     0x0000000146c8a4d3 qt_plugin_instance + 188259
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 30  QtCore                              0x0000000111f900e6 _ZN10QEventLoop4execE6QFlagsINS_17ProcessEventsFlagEE + 502
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 31  QtCore                              0x0000000111f940b2 _ZN16QCoreApplication4execEv + 130
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 32  libqSlicerBaseQTCore.dylib          0x000000010ec949e9 _ZN22qSlicerCoreApplication4execEv + 9
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 33  Slicer                              0x0000000104d0f3f9 main + 505
+[CRITICAL][FD] 17.10.2025 17:47:08 [] (unknown:0) - 34  dyld                                0x0000000204eb8310 start + 2432

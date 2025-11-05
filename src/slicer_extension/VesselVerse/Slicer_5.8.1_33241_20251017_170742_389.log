@@ -1,0 +1,41 @@
+[DEBUG][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Session start time .......: 20251017_170742
+[DEBUG][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Slicer version ...........: 5.8.1 (revision 33241 / 11eaf62) macosx-amd64 - installed release
+[DEBUG][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Operating system .........: macOS / 13.2.1 / 22D68 / UTF-8 - 64-bit
+[DEBUG][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Memory ...................: 8192 MB physical, 4096 MB virtual
+[DEBUG][Qt] 17.10.2025 17:07:42 [] (unknown:0) - CPU ......................:  Apple M2, 8 cores, 8 logical processors
+[DEBUG][Qt] 17.10.2025 17:07:42 [] (unknown:0) - VTK configuration ........: OpenGL2 rendering, TBB threading
+[DEBUG][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Qt configuration .........: version 5.15.8, with SSL, requested OpenGL 3.2 (core profile)
+[DEBUG][Qt] 17.10.2025 17:07:42 [] (unknown:0) - DCMTK configuration ......: version 3.6.8, no SSL
+[DEBUG][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Internationalization .....: disabled, language=
+[DEBUG][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Developer mode ...........: disabled
+[DEBUG][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Application path .........: /Applications/Slicer.app/Contents/MacOS
+[DEBUG][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Additional module paths ..: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VesselVerse-Framework/src/slicer_extension/VesselVerse
+[WARNING][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Error #1 while writing setting "Modules/AdditionalPaths"
+[WARNING][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Error #1 while writing setting "Modules/IgnoreModules"
+[WARNING][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Error #1 while writing setting "Extensions/ManagerEnabled"
+[WARNING][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Error #1 while writing setting "Extensions/ServerUrl"
+[WARNING][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Error #1 while writing setting "Extensions/FrontendServerUrl"
+[WARNING][Qt] 17.10.2025 17:07:42 [] (unknown:0) - Error #1 while writing setting "Extensions/InstallPath"
+[CRITICAL][Stream] 17.10.2025 17:07:45 [] (unknown:0) - TypeError: module() argument 'name' must be str, not qSlicerScriptedLoadableModule
+[CRITICAL][Qt] 17.10.2025 17:07:45 [] (unknown:0) - qSlicerPythonCppAPI::instantiateClass  - [ "__init__" ] - Failed to instantiate scripted pythonqt class "__init__" 0x19e25fdc0
+[CRITICAL][Qt] 17.10.2025 17:07:45 [] (unknown:0) - Fail to instantiate module  "__init__"
+[CRITICAL][Qt] 17.10.2025 17:07:45 [] (unknown:0) - The following modules failed to be instantiated:
+[CRITICAL][Qt] 17.10.2025 17:07:45 [] (unknown:0) -    __init__
+[DEBUG][Python] 17.10.2025 17:07:46 [Python] (/Applications/Slicer.app/Contents/lib/Slicer-5.8/qt-scripted-modules/SubjectHierarchyPlugins/AbstractScriptedSubjectHierarchyPlugin.py:40) - Scripted subject hierarchy plugin registered: SegmentEditor
+[DEBUG][Python] 17.10.2025 17:07:46 [Python] (/Applications/Slicer.app/Contents/lib/Slicer-5.8/qt-scripted-modules/SubjectHierarchyPlugins/AbstractScriptedSubjectHierarchyPlugin.py:40) - Scripted subject hierarchy plugin registered: SegmentStatistics
+[DEBUG][Qt] 17.10.2025 17:07:46 [] (unknown:0) - Switch to module:  "Welcome"
+[DEBUG][Qt] 17.10.2025 17:07:47 [] (unknown:0) - Switch to module:  "VesselVerse"
+[INFO][Stream] 17.10.2025 17:07:47 [] (unknown:0) - Reload and Test Panel not found: ignoring this step
+[INFO][Stream] 17.10.2025 17:07:47 [] (unknown:0) - Available datasets: ['IXI', '301_CT23', '302_MR23', '303_CT24', '304_MR24', 'IXI_COSTA']
+[INFO][Stream] 17.10.2025 17:07:49 [] (unknown:0) - Selected Dataset: IXI
+[INFO][Stream] 17.10.2025 17:07:49 [] (unknown:0) - Base Path: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data
+[CRITICAL][Stream] 17.10.2025 17:07:49 [] (unknown:0) - Traceback (most recent call last):
+[CRITICAL][Stream] 17.10.2025 17:07:49 [] (unknown:0) -   File "/Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VesselVerse-Framework/src/slicer_extension/VesselVerse/VesselVerse.py", line 771, in <lambda>
+[CRITICAL][Stream] 17.10.2025 17:07:49 [] (unknown:0) -     confirmButton.clicked.connect(lambda: self.applyDatasetSelection(dialog))
+[CRITICAL][Stream] 17.10.2025 17:07:49 [] (unknown:0) -   File "/Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VesselVerse-Framework/src/slicer_extension/VesselVerse/VesselVerse.py", line 817, in applyDatasetSelection
+[CRITICAL][Stream] 17.10.2025 17:07:49 [] (unknown:0) -     self.logic.setDataset(base_path)  # Pass base_path instead of just the name
+[CRITICAL][Stream] 17.10.2025 17:07:49 [] (unknown:0) -   File "/Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VesselVerse-Framework/src/slicer_extension/VesselVerse/VesselVerse.py", line 1413, in setDataset
+[CRITICAL][Stream] 17.10.2025 17:07:49 [] (unknown:0) -     self.dataset = Dataset(self.base_path)
+[CRITICAL][Stream] 17.10.2025 17:07:49 [] (unknown:0) -   File "/Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VesselVerse-Framework/src/slicer_extension/VesselVerse/VesselVerse.py", line 1770, in __init__
+[CRITICAL][Stream] 17.10.2025 17:07:49 [] (unknown:0) -     raise ValueError(f"Base path does not exist: {self.base_path}")
+[CRITICAL][Stream] 17.10.2025 17:07:49 [] (unknown:0) - ValueError: Base path does not exist: /Users/aliceboccadifuoco/Desktop/VesselVerse-Framework/VESSELVERSE_DATA_IXI/data
