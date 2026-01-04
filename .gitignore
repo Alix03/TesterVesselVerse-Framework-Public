@@ -59,7 +59,8 @@ venv.bak/
 *~
 
 # Credentials (extra safety)
-credentials/*.json
+credentials/*
+!credentials/.gitkeep
 *.pem
 *.key
 
