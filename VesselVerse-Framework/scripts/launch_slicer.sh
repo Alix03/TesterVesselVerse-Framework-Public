@@ -21,8 +21,18 @@ fi
 echo "Slicer Path: $SLICER_PATH"
 echo "Module Path: $MODULE_PATH"
 
+# Set Python path to include the src directory for model_config imports
+SRC_PATH="$(dirname "$(dirname "$(realpath "$0")")")/src"
+export PYTHONPATH="$SRC_PATH:$PYTHONPATH"
+
 # Launch Slicer with the VesselVerse module
-"$SLICER_PATH" --additional-module-paths "$MODULE_PATH" "$@" --python-code "slicer.util.selectModule('VesselVerse')"
+# Note: Auto-switching to module is done after a delay to avoid segfault
+"$SLICER_PATH" --additional-module-paths "$MODULE_PATH" "$@" --python-code "
+import sys
+sys.path.insert(0, '$SRC_PATH')
+import qt
+qt.QTimer.singleShot(1000, lambda: slicer.util.selectModule('VesselVerse'))
+"
 # Function to move SQL files to the specified directory
 
 move_sql_files() {
