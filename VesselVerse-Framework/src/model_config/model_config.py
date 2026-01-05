@@ -55,10 +55,15 @@ class DatasetRegistry:
         ################################### ADD HERE THE DATASETS THAT YOU WANT TO SUPPORT ###################################################
         ######################################################################################################################################
         ######################################################################################################################################
+        
+        # Calculate absolute path from this file's location
+        # Go up from src/model_config/ to VesselVerse-Framework/
+        repo_root = Path(__file__).resolve().parent.parent.parent
+        
         ixi_config = DatasetConfig(
             name="IXI",
             unique_name="IXI",
-            base_path=Path("../VESSELVERSE_DATA_IXI/data"),
+            base_path=repo_root / "VESSELVERSE_DATA_IXI" / "data",
             image_dir="IXI_TOT",
             image_suffix="nii.gz",
             modality="MR",
@@ -76,7 +81,7 @@ class DatasetRegistry:
         topcow_config_23_CT = DatasetConfig(
             name="COW",
             unique_name="301_CT23",
-            base_path=Path("../VESSELVERSE_DATA_COW/data/301_CT23"),
+            base_path=repo_root / "VESSELVERSE_DATA_COW" / "data" / "301_CT23",
             image_dir="COW_TOT",
             image_suffix="nii.gz",
             modality="CT",
@@ -94,7 +99,7 @@ class DatasetRegistry:
         topcow_config_23_MR = DatasetConfig(
             name="COW",
             unique_name="302_MR23",
-            base_path=Path("../VESSELVERSE_DATA_COW/302_MR23/data"),
+            base_path=repo_root / "VESSELVERSE_DATA_COW" / "302_MR23" / "data",
             image_dir="COW_TOT",
             image_suffix="nii.gz",
             modality="MR",
@@ -154,7 +159,7 @@ class DatasetRegistry:
         ixi_costa_config = DatasetConfig(
             name="IXI",
             unique_name="IXI_COSTA",
-            base_path=Path("../VESSELVERSE_DATA_IXI/IXI_ANNOT"),
+            base_path=repo_root / "VESSELVERSE_DATA_IXI" / "IXI_ANNOT",
             image_dir="IXI_TOT",
             image_suffix="nii.gz",
             modality="MR",

@@ -112,56 +112,164 @@ Initial_owner_setup() {
     # Update config.sh with selected credentials
     sed -i.bak "s|owner_auth_path=.*|owner_auth_path=\"$SELECTED_CRED\"|g" "$REPO_ROOT/config.sh"
 
-    # Step 1.3 : Activate owner mode (configure DVC remotes)
-    echo -e "${YELLOW}[3/4] Configuring DVC remotes...${NC}"
+    # Step 1.3 : Initialize all datasets (Git + DVC)
+    echo -e "${YELLOW}[3/6] Initializing all datasets...${NC}"
     
-    # Load the config to get database IDs and credentials
+    DATASETS_DIR="$REPO_ROOT/VesselVerse-Dataset/datasets"
+    
+    if [ ! -d "$DATASETS_DIR" ]; then
+        echo -e "${RED}❌ Error: Datasets directory not found: $DATASETS_DIR${NC}"
+        exit 1
+    fi
+    
+    # Find all datasets
+    ALL_DATASETS=($(find "$DATASETS_DIR" -maxdepth 1 -type d -name "D-*" | sort))
+    
+    if [ ${#ALL_DATASETS[@]} -eq 0 ]; then
+        echo -e "${RED}❌ No datasets found in $DATASETS_DIR${NC}"
+        exit 1
+    fi
+    
+    echo "Found ${#ALL_DATASETS[@]} dataset(s):"
+    for dataset in "${ALL_DATASETS[@]}"; do
+        echo "  • $(basename "$dataset")"
+    done
+    echo ""
+    
+    echo "Initializing Git and DVC for each dataset..."
+    echo ""
+    
+    # Load config for database IDs
     source "$REPO_ROOT/config.sh"
+    
+    for dataset_path in "${ALL_DATASETS[@]}"; do
+        dataset_name=$(basename "$dataset_path")
+        echo -e "${CYAN}► Processing: $dataset_name${NC}"
+        
+        cd "$dataset_path"
+        
+        # Initialize Git if not present
+        if [ ! -d ".git" ]; then
+            git init >/dev/null 2>&1
+            echo "  ✓ Git initialized"
+        else
+            echo "  ✓ Git already initialized"
+        fi
+        
+        # Initialize DVC if not present
+        if [ ! -d ".dvc" ]; then
+            dvc init >/dev/null 2>&1
+            dvc config core.autostage true >/dev/null 2>&1
+            echo "  ✓ DVC initialized"
+        else
+            echo "  ✓ DVC already initialized"
+        fi
+        
+        # Configure DVC remotes
+        dvc remote list | grep -q "^storage" && dvc remote remove storage 2>/dev/null || true
+        dvc remote list | grep -q "^uploads" && dvc remote remove uploads 2>/dev/null || true
+        
+        if [ -n "$database_ID" ] && [ -n "$SELECTED_CRED" ]; then
+            dvc remote add -d storage "gdrive://${database_ID}" >/dev/null 2>&1
+            dvc remote modify storage gdrive_service_account_json_file_path "$SELECTED_CRED" >/dev/null 2>&1
+            dvc remote modify storage gdrive_use_service_account true >/dev/null 2>&1
+            echo "  ✓ Storage remote configured"
+        fi
+        
+        if [ -n "$user_upload_ID" ] && [ -n "$SELECTED_CRED" ]; then
+            dvc remote add uploads "gdrive://${user_upload_ID}" >/dev/null 2>&1
+            dvc remote modify uploads gdrive_service_account_json_file_path "$SELECTED_CRED" >/dev/null 2>&1
+            dvc remote modify uploads gdrive_use_service_account true >/dev/null 2>&1
+            echo "  ✓ Uploads remote configured"
+        fi
+        
+        echo ""
+    done
+    
     cd "$REPO_ROOT"
-    
-    # Remove existing remotes if they exist
-    if dvc remote list | grep -q "^storage"; then
-        dvc remote remove storage 2>/dev/null || true
-    fi
-
-    if dvc remote list | grep -q "^uploads"; then
-        dvc remote remove uploads 2>/dev/null || true
-    fi
-
-    # Add storage(pull) remote with database_ID 
-    if [ -z "$database_ID" ]; then
-        echo -e "${RED}❌ Error: database_ID is empty in config.sh${NC}"
-        exit 1
-    fi
-
-    echo "Setting up 'storage' remote (Database ID: $database_ID)"
-    dvc remote add -d storage "gdrive://${database_ID}"
-    dvc remote modify storage gdrive_service_account_json_file_path "$SELECTED_CRED"
-    dvc remote modify storage gdrive_use_service_account true
-
-    # Add uploads(push) remote with user_upload_ID (using OWNER credentials)
-    if [ -z "$user_upload_ID" ]; then
-        echo -e "${RED}❌ Error: user_upload_ID is empty in config.sh${NC}"
-        exit 1
-    fi
-
-    echo "Setting up 'uploads' remote (Upload ID: $user_upload_ID)"
-    dvc remote add uploads "gdrive://${user_upload_ID}"
-    dvc remote modify uploads gdrive_service_account_json_file_path "$SELECTED_CRED"
-    dvc remote modify uploads gdrive_use_service_account true
-    
-    # Set autostage - no git add needed
-    dvc config core.autostage true
+    echo -e "${GREEN}✅ All datasets initialized${NC}"
+    echo ""
 
     # Step 1.4: Verify setup
-    echo -e "${YELLOW}[4/4] Verifying remote setup...${NC}"
-    # Verify configuration
-    if dvc remote list | grep -q "^storage" && dvc remote list | grep -q "^uploads"; then
-        echo -e "${GREEN}✅ Owner Mode Activated${NC}"
+    echo -e "${YELLOW}[4/6] Verifying setup...${NC}"
+    
+    # Check at least one dataset has DVC configured
+    CONFIGURED_COUNT=0
+    for dataset_path in "${ALL_DATASETS[@]}"; do
+        cd "$dataset_path"
+        if dvc remote list 2>/dev/null | grep -q "storage"; then
+            ((CONFIGURED_COUNT++))
+        fi
+    done
+    
+    cd "$REPO_ROOT"
+    
+    if [ $CONFIGURED_COUNT -gt 0 ]; then
+        echo -e "${GREEN}✅ $CONFIGURED_COUNT dataset(s) configured with DVC remotes${NC}"
     else
-        echo -e "${RED}❌ Error: Remote configuration failed${NC}"
+        echo -e "${RED}❌ Error: No datasets configured${NC}"
         exit 1
     fi
+    echo ""
+    
+    # Step 1.5: Select default dataset
+    echo -e "${YELLOW}[5/6] Selecting default dataset...${NC}"
+    
+    # Find datasets with .dvc files
+    echo "Available datasets with tracked data:"
+    DATASETS=()
+    for dataset_dir in "$DATASETS_DIR/D-"*; do
+        if [ -d "$dataset_dir" ]; then
+            dataset_name=$(basename "$dataset_dir")
+            DVC_COUNT=$(find "$dataset_dir" -maxdepth 1 -name "*.dvc" -type f 2>/dev/null | wc -l | tr -d ' ')
+            if [ "$DVC_COUNT" -gt 0 ]; then
+                DATASETS+=("$dataset_name")
+                INDEX=$((${#DATASETS[@]} - 1))
+                echo "  [$INDEX] ${dataset_name#D-} ($DVC_COUNT tracked items)"
+            else
+                echo "  [-] ${dataset_name#D-} (no tracked data yet)"
+            fi
+        fi
+    done
+
+    if [ ${#DATASETS[@]} -eq 0 ]; then
+        echo -e "${YELLOW}⚠️  No datasets with tracked data found yet${NC}"
+        SELECTED_DATASET="IXI"  # Default
+    else
+        echo ""
+        read -p "Select default dataset number [0]: " DATASET_CHOICE
+        DATASET_CHOICE=${DATASET_CHOICE:-0}
+
+        if [ $DATASET_CHOICE -lt 0 ] || [ $DATASET_CHOICE -ge ${#DATASETS[@]} ]; then
+            echo -e "${RED}❌ Invalid selection${NC}"
+            exit 1
+        fi
+
+        SELECTED_DATASET="${DATASETS[$DATASET_CHOICE]#D-}"
+    fi
+    
+    echo -e "${GREEN}✅ Default dataset: $SELECTED_DATASET${NC}"
+
+    # Update config.sh with selected dataset
+    sed -i.bak "s|DATASET_NAME=.*|DATASET_NAME='$SELECTED_DATASET'|g" "$REPO_ROOT/config.sh"
+    echo ""
+    
+    # Step 1.6: Final verification
+    echo -e "${YELLOW}[6/6] Final verification...${NC}"
+    
+    # Check Git status for all datasets
+    echo -e "${CYAN}Git/DVC status per dataset:${NC}"
+    for dataset_path in "${ALL_DATASETS[@]}"; do
+        dataset_name=$(basename "$dataset_path")
+        cd "$dataset_path"
+        HAS_GIT="❌"
+        HAS_DVC="❌"
+        [ -d ".git" ] && HAS_GIT="✅"
+        [ -d ".dvc" ] && HAS_DVC="✅"
+        echo "  $dataset_name: Git $HAS_GIT | DVC $HAS_DVC"
+    done
+    
+    cd "$REPO_ROOT"
     echo ""
 
     # Summary
@@ -170,9 +278,16 @@ Initial_owner_setup() {
     echo -e "${BLUE}═══════════════════════════════════════════════════${NC}"
     echo ""
     echo -e "${BLUE}Configuration Summary:${NC}"
-    echo -e "  Credentials: ${GREEN}$SELECTED_CRED${NC}"
-    echo -e "  Storage Remote: ${GREEN}gdrive://$database_ID${NC}"
-    echo -e "  Uploads Remote: ${GREEN}gdrive://$user_upload_ID${NC}"
+    echo -e "  Credentials:       ${GREEN}$SELECTED_CRED${NC}"
+    echo -e "  Default Dataset:   ${GREEN}$SELECTED_DATASET${NC}"
+    echo -e "  Datasets Init:     ${GREEN}${#ALL_DATASETS[@]} total${NC}"
+    echo -e "  Storage Remote:    ${GREEN}gdrive://$database_ID${NC}"
+    echo -e "  Uploads Remote:    ${GREEN}gdrive://$user_upload_ID${NC}"
+    echo ""
+    echo -e "${CYAN}Initialized datasets:${NC}"
+    for dataset_path in "${ALL_DATASETS[@]}"; do
+        echo -e "  • $(basename "$dataset_path")"
+    done
     echo ""
 }
 
@@ -182,9 +297,9 @@ owner_update_dataset() {
     echo -e "${BLUE}═══════════════════════════════════════════════════${NC}"
     echo -e "${BLUE}   Update Dataset - Owner Mode                     ${NC}"
     echo -e "${BLUE}═══════════════════════════════════════════════════${NC}"
+    echo ""
 
    # Step 2.1 : Check config
-    # Look for config.sh file
     if [ ! -f "$REPO_ROOT/config.sh" ]; then
         echo -e "${RED}❌ Error: config.sh not found${NC}"
         echo "Run option [1] Initial Setup first"
@@ -193,111 +308,106 @@ owner_update_dataset() {
 
     # Load config
     source "$REPO_ROOT/config.sh"
-
-    # Step 2.2 : Check DVC config
-    # Verify DVC is configured
-    if ! dvc remote list | grep -q "storage"; then
-        echo -e "${RED}❌ Error: DVC remotes not configured${NC}"
+    
+    if [ -z "$DATASET_NAME" ]; then
+        echo -e "${RED}❌ Error: No dataset selected${NC}"
         echo "Run option [1] Initial Setup first"
         return 1
     fi
+    
+    echo -e "${CYAN}Active dataset: $DATASET_NAME${NC}"
+    echo ""
+
+    # Define dataset directory
+    DATASET_DIR="$REPO_ROOT/VesselVerse-Dataset/datasets/D-$DATASET_NAME"
+    
+    if [ ! -d "$DATASET_DIR" ]; then
+        echo -e "${RED}❌ Error: Dataset directory not found: $DATASET_DIR${NC}"
+        return 1
+    fi
+
+    # Step 2.2 : Check DVC config in the dataset directory
+    cd "$DATASET_DIR"
+    
+    if ! dvc remote list 2>/dev/null | grep -q "storage"; then
+        echo -e "${RED}❌ Error: DVC remotes not configured for this dataset${NC}"
+        echo "Run option [1] Initial Setup first"
+        cd "$REPO_ROOT"
+        return 1
+    fi
+    
+    echo -e "${GREEN}✅ DVC remotes configured${NC}"
+    echo ""
 
     # Step 2.3 : Update Git Repo
-    echo -e "${YELLOW}[1/4] Updating Git repository...${NC}"
-    cd "$REPO_ROOT"
+    echo -e "${YELLOW}[1/3] Updating Git repository...${NC}"
     
-    git pull
+    git pull 2>/dev/null
     if [ $? -ne 0 ]; then
         echo -e "${YELLOW}⚠️  Warning: Git pull failed or had conflicts${NC}"
-        echo "Please resolve any conflicts manually"
+        echo "This dataset might not be tracked by Git remote yet"
     else
         echo -e "${GREEN}✅ Git repository updated${NC}"
     fi
     echo ""
 
-    # Step 2.4: Restore any deleted .dvc files
-    echo -e "${YELLOW}[2/4] Restoring .dvc files if needed...${NC}"
+    # Step 2.4: Check for tracked data
+    echo -e "${YELLOW}[2/3] Checking for tracked data...${NC}"
     
-    DATA_DIR="$REPO_ROOT/VESSELVERSE_DATA_IXI/data"
-    
-    if [ ! -d "$DATA_DIR" ]; then
-        echo -e "${RED}❌ Error: Data directory not found: $DATA_DIR${NC}"
-        return 1
-    fi
-    
-    cd "$DATA_DIR"
-    
-    # Check if any .dvc files were deleted and restore them
-    DELETED_DVC=$(git status --short 2>/dev/null | grep "\.dvc$" | grep "^ D\|^D " | wc -l | tr -d ' ')
-    if [ "$DELETED_DVC" -gt 0 ]; then
-        echo "  Restoring $DELETED_DVC deleted .dvc file(s)..."
-        git restore *.dvc 2>/dev/null || git checkout -- *.dvc 2>/dev/null || true
-        echo -e "${GREEN}✅ .dvc files restored${NC}"
-    else
-        echo -e "${GREEN}✅ All .dvc files present${NC}"
-    fi
-    echo ""
-
-    # Step 2.5: Scan for .dvc files
-    echo -e "${YELLOW}[3/4] Scanning for .dvc files...${NC}"
-    
-    cd "$REPO_ROOT"
-    
-    DVC_FILES=()
-    while IFS= read -r -d '' dvc_file; do
-        DVC_FILES+=("$dvc_file")
-    done < <(find "$DATA_DIR" -maxdepth 1 -name "*.dvc" -type f -print0)
-
+    DVC_FILES=($(find . -maxdepth 1 -name "*.dvc" -type f 2>/dev/null))
     if [ ${#DVC_FILES[@]} -eq 0 ]; then
-        echo -e "${YELLOW}⚠️  No .dvc files found in $DATA_DIR${NC}"
+        echo -e "${YELLOW}⚠️  No tracked data (.dvc files) found in this dataset${NC}"
+        cd "$REPO_ROOT"
         return 0
     fi
 
-    echo -e "${GREEN}Found ${#DVC_FILES[@]} tracked item(s):${NC}"
-    for dvc_file in "${DVC_FILES[@]}"; do
-        dvc_name=$(basename "$dvc_file" .dvc)
-        echo -e "  • $dvc_name"
-    done
+    echo -e "Found ${#DVC_FILES[@]} tracked item(s)"
     echo ""
-
-    # Step 2.6: Download all data
-
-    echo -e "${YELLOW}[4/4] Downloading updates from remote...${NC}"
     echo ""
-
-    TOTAL_UPDATED=0
+    
+    # Step 2.5: Download updates
+    echo -e "${YELLOW}[3/3] Updating dataset from remote...${NC}"
+    echo "Syncing ${#DVC_FILES[@]} tracked items..."
+    echo ""
+    
+    TOTAL_SUCCESS=0
     TOTAL_FAILED=0
-
-    cd "$REPO_ROOT"
     
     for dvc_file in "${DVC_FILES[@]}"; do
         dvc_name=$(basename "$dvc_file" .dvc)
         echo -e "${CYAN}Pulling: $dvc_name${NC}"
-        
         dvc pull "$dvc_file"
-        
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}  ✅ $dvc_name downloaded${NC}"
-            ((TOTAL_UPDATED++))
+            ((TOTAL_SUCCESS++))
         else
             echo -e "${YELLOW}  ⚠️  $dvc_name - Failed to download${NC}"
             ((TOTAL_FAILED++))
         fi
     done
-    
-    echo ""    cd "$REPO_ROOT"
+
+    cd "$REPO_ROOT"
+    echo ""
+
+    if [ $TOTAL_FAILED -gt 0 ]; then
+        echo -e "${YELLOW}⚠️  Warning: $TOTAL_FAILED file(s) failed to download${NC}"
+        echo "This is normal if some data is not yet available"
+    else
+        echo -e "${GREEN}✅ Dataset updated successfully${NC}"
+    fi
+    echo ""
 
     # Summary
-
     echo -e "${BLUE}═══════════════════════════════════════════════════${NC}"
-    echo -e "${GREEN}          Download Complete! 🎉${NC}"
+    echo -e "${GREEN}          Update Complete! 🎉${NC}"
     echo -e "${BLUE}═══════════════════════════════════════════════════${NC}"
     echo ""
     echo -e "${BLUE}Update Summary:${NC}"
-    echo -e "  Total datasets processed: ${GREEN}${#DATASETS[@]}${NC}"
-    echo -e "  Successfully updated:     ${GREEN}$TOTAL_UPDATED${NC}"
+    echo -e "  Dataset:      ${GREEN}$DATASET_NAME${NC}"
+    echo -e "  Items synced: ${GREEN}${#DVC_FILES[@]}${NC}"
+    echo -e "  Successful:   ${GREEN}$TOTAL_SUCCESS${NC}"
     if [ $TOTAL_FAILED -gt 0 ]; then
-        echo -e "  Warnings:                 ${YELLOW}$TOTAL_FAILED${NC}"
+        echo -e "  Failed:       ${YELLOW}$TOTAL_FAILED${NC}"
     fi
     echo ""
 }

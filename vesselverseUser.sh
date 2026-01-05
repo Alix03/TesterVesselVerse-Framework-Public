@@ -110,174 +110,250 @@ user_initial_setup() {
     sed -i.bak "s|user_auth_path=.*|user_auth_path=\"$SELECTED_CRED\"|g" "$REPO_ROOT/config.sh"
     echo ""
 
-    # Step 1.3 : Select dataset
-    echo -e "${YELLOW}[3/6] Selecting dataset...${NC}"
+    # Step 1.3 : Initialize all datasets (Git + DVC)
+    echo -e "${YELLOW}[3/8] Initializing all datasets...${NC}"
     
-    # Find available datasets with .dvc files
-    echo "Scanning for datasets with tracked data..."
+    DATASETS_DIR="$REPO_ROOT/VesselVerse-Dataset/datasets"
+    
+    if [ ! -d "$DATASETS_DIR" ]; then
+        echo -e "${RED}❌ Error: Datasets directory not found: $DATASETS_DIR${NC}"
+        return 1
+    fi
+    
+    # Find all datasets
+    ALL_DATASETS=($(find "$DATASETS_DIR" -maxdepth 1 -type d -name "D-*" | sort))
+    
+    if [ ${#ALL_DATASETS[@]} -eq 0 ]; then
+        echo -e "${RED}❌ No datasets found in $DATASETS_DIR${NC}"
+        return 1
+    fi
+    
+    echo "Found ${#ALL_DATASETS[@]} dataset(s):"
+    for dataset in "${ALL_DATASETS[@]}"; do
+        echo "  • $(basename "$dataset")"
+    done
+    echo ""
+    
+    echo "Initializing Git and DVC for each dataset..."
+    echo ""
+    
+    # Load config for database IDs
+    source "$REPO_ROOT/config.sh"
+    
+    for dataset_path in "${ALL_DATASETS[@]}"; do
+        dataset_name=$(basename "$dataset_path")
+        echo -e "${CYAN}► Processing: $dataset_name${NC}"
+        
+        cd "$dataset_path"
+        
+        # Initialize Git if not present
+        if [ ! -d ".git" ]; then
+            git init >/dev/null 2>&1
+            echo "  ✓ Git initialized"
+        else
+            echo "  ✓ Git already initialized"
+        fi
+        
+        # Initialize DVC if not present
+        if [ ! -d ".dvc" ]; then
+            dvc init >/dev/null 2>&1
+            dvc config core.autostage true >/dev/null 2>&1
+            echo "  ✓ DVC initialized"
+        else
+            echo "  ✓ DVC already initialized"
+        fi
+        
+        # Configure DVC remotes
+        dvc remote list | grep -q "^storage" && dvc remote remove storage 2>/dev/null || true
+        dvc remote list | grep -q "^uploads" && dvc remote remove uploads 2>/dev/null || true
+        
+        if [ -n "$database_ID" ] && [ -n "$SELECTED_CRED" ]; then
+            dvc remote add -d storage "gdrive://${database_ID}" >/dev/null 2>&1
+            dvc remote modify storage gdrive_service_account_json_file_path "$SELECTED_CRED" >/dev/null 2>&1
+            dvc remote modify storage gdrive_use_service_account true >/dev/null 2>&1
+            echo "  ✓ Storage remote configured"
+        fi
+        
+        if [ -n "$user_upload_ID" ] && [ -n "$SELECTED_CRED" ]; then
+            dvc remote add uploads "gdrive://${user_upload_ID}" >/dev/null 2>&1
+            dvc remote modify uploads gdrive_service_account_json_file_path "$SELECTED_CRED" >/dev/null 2>&1
+            dvc remote modify uploads gdrive_use_service_account true >/dev/null 2>&1
+            echo "  ✓ Uploads remote configured"
+        fi
+        
+        echo ""
+    done
+    
+    cd "$REPO_ROOT"
+    echo -e "${GREEN}✅ All datasets initialized${NC}"
+    echo ""
+
+    # Step 1.4 : Select dataset to use
+    echo -e "${YELLOW}[4/8] Selecting active dataset...${NC}"
+    
+    # Find datasets with .dvc files
+    echo "Datasets with tracked data:"
     DATASETS=()
-    for dataset_dir in "$REPO_ROOT/VesselVerse-Dataset/datasets/D-"*; do
+    for dataset_dir in "$DATASETS_DIR/D-"*; do
         if [ -d "$dataset_dir" ]; then
             dataset_name=$(basename "$dataset_dir")
-            if find "$dataset_dir" -maxdepth 1 -name "*.dvc" -type f | grep -q .; then
+            DVC_COUNT=$(find "$dataset_dir" -maxdepth 1 -name "*.dvc" -type f 2>/dev/null | wc -l | tr -d ' ')
+            if [ "$DVC_COUNT" -gt 0 ]; then
                 DATASETS+=("$dataset_name")
+                INDEX=$((${#DATASETS[@]} - 1))
+                echo "  [$INDEX] ${dataset_name#D-} ($DVC_COUNT tracked items)"
+            else
+                echo "  [-] ${dataset_name#D-} (no tracked data yet)"
             fi
         fi
     done
 
     if [ ${#DATASETS[@]} -eq 0 ]; then
-        echo -e "${RED}❌ Error: No datasets with tracked data found${NC}"
-        echo "Available directories found, but they don't have .dvc files yet."
-        return 1
+        echo -e "${YELLOW}⚠️  No datasets with tracked data found yet${NC}"
+        echo "You can add data later and pull it."
+        SELECTED_DATASET="IXI"  # Default
+    else
+        echo ""
+        read -p "Select dataset number [0]: " DATASET_CHOICE
+        DATASET_CHOICE=${DATASET_CHOICE:-0}
+
+        if [ $DATASET_CHOICE -lt 0 ] || [ $DATASET_CHOICE -ge ${#DATASETS[@]} ]; then
+            echo -e "${RED}❌ Invalid selection${NC}"
+            return 1
+        fi
+
+        SELECTED_DATASET="${DATASETS[$DATASET_CHOICE]#D-}"
     fi
-
-    echo "Available datasets with data:"
-    for i in "${!DATASETS[@]}"; do
-        DATASET_NAME="${DATASETS[$i]#D-}"
-        DVC_COUNT=$(find "$REPO_ROOT/VesselVerse-Dataset/datasets/${DATASETS[$i]}" -maxdepth 1 -name "*.dvc" -type f | wc -l | tr -d ' ')
-        echo "  [$i] $DATASET_NAME ($DVC_COUNT tracked items)"
-    done
-
-    echo ""
-    read -p "Select dataset number [0]: " DATASET_CHOICE
-    DATASET_CHOICE=${DATASET_CHOICE:-0}
-
-    if [ $DATASET_CHOICE -lt 0 ] || [ $DATASET_CHOICE -ge ${#DATASETS[@]} ]; then
-        echo -e "${RED}❌ Invalid selection${NC}"
-        return 1
-    fi
-
-    SELECTED_DATASET="${DATASETS[$DATASET_CHOICE]#D-}"
-    echo -e "${GREEN}✅ Selected dataset: $SELECTED_DATASET${NC}"
+    
+    echo -e "${GREEN}✅ Active dataset: $SELECTED_DATASET${NC}"
 
     # Update config.sh with selected dataset
     sed -i.bak "s|DATASET_NAME=.*|DATASET_NAME='$SELECTED_DATASET'|g" "$REPO_ROOT/config.sh"
     echo ""
 
-    # Step 1.4 : Activate user mode (configure DVC remotes)
-    echo -e "${YELLOW}[4/6] Activating user mode...${NC}"
-
-    # Load the config to get database IDs
-    source "$REPO_ROOT/config.sh"
+    # Step 1.5 : Verify setup
+    echo -e "${YELLOW}[5/8] Verifying setup...${NC}"
+    
+    # Check at least one dataset has DVC configured
+    CONFIGURED_COUNT=0
+    for dataset_path in "${ALL_DATASETS[@]}"; do
+        cd "$dataset_path"
+        if dvc remote list 2>/dev/null | grep -q "storage"; then
+            ((CONFIGURED_COUNT++))
+        fi
+    done
+    
     cd "$REPO_ROOT"
-
-    echo "Configuring DVC remotes..."
-
-    # Remove existing remotes if they exist
-    if dvc remote list | grep -q "^storage"; then
-        dvc remote remove storage 2>/dev/null || true
-    fi
-
-    if dvc remote list | grep -q "^uploads"; then
-        dvc remote remove uploads 2>/dev/null || true
-    fi
-
-    # Add storage remote with database_ID
-    if [ -z "$database_ID" ]; then
-        echo -e "${RED}❌ Error: database_ID is empty in config.sh${NC}"
-        return 1
-    fi
-
-    echo "Setting up 'storage' remote (Database ID: $database_ID)"
-    dvc remote add -d storage "gdrive://${database_ID}"
-    dvc remote modify storage gdrive_service_account_json_file_path "$SELECTED_CRED"
-    dvc remote modify storage gdrive_use_service_account true
-
-    # Add uploads remote with user_upload_ID
-    if [ -z "$user_upload_ID" ]; then
-        echo -e "${RED}❌ Error: user_upload_ID is empty in config.sh${NC}"
-        return 1
-    fi
-
-    echo "Setting up 'uploads' remote (Upload ID: $user_upload_ID)"
-    dvc remote add uploads "gdrive://${user_upload_ID}"
-    dvc remote modify uploads gdrive_service_account_json_file_path "$SELECTED_CRED"
-    dvc remote modify uploads gdrive_use_service_account true
-
-    # Set autostage
-    dvc config core.autostage true
-
-    # Verify configuration
-    if dvc remote list | grep -q "^storage" && dvc remote list | grep -q "^uploads"; then
-        echo -e "${GREEN}✅ User Mode Activated${NC}"
+    
+    if [ $CONFIGURED_COUNT -gt 0 ]; then
+        echo -e "${GREEN}✅ $CONFIGURED_COUNT dataset(s) configured with DVC remotes${NC}"
     else
-        echo -e "${RED}❌ Error: Remote configuration failed${NC}"
+        echo -e "${RED}❌ Error: No datasets configured${NC}"
         return 1
     fi
     echo ""
 
-    # Step 1.5: Download dataset
-    echo -e "${YELLOW}[5/6] Downloading dataset...${NC}"
+    # Step 1.6: Download dataset
+    echo -e "${YELLOW}[6/8] Downloading selected dataset...${NC}"
 
-    # Use VESSELVERSE_DATA_IXI/data/ for .dvc files (not VesselVerse-Dataset which is dvc-ignored)
-    DATA_DIR="$REPO_ROOT/VESSELVERSE_DATA_IXI/data"
-    DVC_FILES=($(find "$DATA_DIR" -maxdepth 1 -name "*.dvc" -type f))
-
-    if [ ${#DVC_FILES[@]} -eq 0 ]; then
-        echo -e "${YELLOW}⚠️  Warning: No tracked data (.dvc files) found in $DATA_DIR${NC}"
-        echo "This might be a test dataset or not yet configured for DVC."
+    # Use the selected dataset directory
+    SELECTED_DATASET_DIR="$DATASETS_DIR/D-$SELECTED_DATASET"
+    
+    if [ ! -d "$SELECTED_DATASET_DIR" ]; then
+        echo -e "${YELLOW}⚠️  Dataset directory not found: $SELECTED_DATASET_DIR${NC}"
         echo "Skipping download step."
         echo ""
     else
-        echo "Found ${#DVC_FILES[@]} data items to download"
-        echo "This may take a while depending on dataset size and network speed"
-        echo ""
+        cd "$SELECTED_DATASET_DIR"
+        DVC_FILES=($(find . -maxdepth 1 -name "*.dvc" -type f 2>/dev/null))
 
-        read -p "Do you want to download the full dataset now? (y/n) [y]: " DOWNLOAD_NOW
-        DOWNLOAD_NOW=${DOWNLOAD_NOW:-y}
-
-        if [[ "$DOWNLOAD_NOW" =~ ^[Yy]$ ]]; then
-            echo -e "${BLUE}Downloading all data...${NC}"
-            
-            # Run dvc pull from repo root where credentials are configured
-            cd "$REPO_ROOT"
-            for dvc_file in "${DVC_FILES[@]}"; do
-                dvc_name=$(basename "$dvc_file" .dvc)
-                echo -e "${CYAN}Pulling: $dvc_name${NC}"
-                dvc pull "$dvc_file"
-            done
-            
-            if [ $? -ne 0 ]; then
-                echo -e "${YELLOW}⚠️  Warning: Some files may have failed to download${NC}"
-                echo "This is normal if some data is not yet available or is excluded."
-            else
-                echo -e "${GREEN}✅ Dataset downloaded successfully${NC}"
-            fi
-            
-            cd "$REPO_ROOT"
+        if [ ${#DVC_FILES[@]} -eq 0 ]; then
+            echo -e "${YELLOW}⚠️  No tracked data (.dvc files) found in this dataset${NC}"
+            echo "This might be a test dataset or not yet configured for DVC."
+            echo "Skipping download step."
+            echo ""
         else
-            echo -e "${YELLOW}⚠️  Skipping download. You can download later with option [2] Update Dataset${NC}"
+            echo "Found ${#DVC_FILES[@]} data items to download for $SELECTED_DATASET"
+            echo "This may take a while depending on dataset size and network speed"
+            echo ""
+
+            read -p "Do you want to download the full dataset now? (y/n) [y]: " DOWNLOAD_NOW
+            DOWNLOAD_NOW=${DOWNLOAD_NOW:-y}
+
+            if [[ "$DOWNLOAD_NOW" =~ ^[Yy]$ ]]; then
+                echo -e "${BLUE}Downloading all data...${NC}"
+                
+                TOTAL_SUCCESS=0
+                TOTAL_FAILED=0
+                
+                for dvc_file in "${DVC_FILES[@]}"; do
+                    dvc_name=$(basename "$dvc_file" .dvc)
+                    echo -e "${CYAN}Pulling: $dvc_name${NC}"
+                    dvc pull "$dvc_file"
+                    if [ $? -eq 0 ]; then
+                        ((TOTAL_SUCCESS++))
+                    else
+                        ((TOTAL_FAILED++))
+                    fi
+                done
+                
+                if [ $TOTAL_FAILED -gt 0 ]; then
+                    echo -e "${YELLOW}⚠️  Warning: $TOTAL_FAILED file(s) failed to download${NC}"
+                    echo "This is normal if some data is not yet available or is excluded."
+                else
+                    echo -e "${GREEN}✅ Dataset downloaded successfully${NC}"
+                fi
+            else
+                echo -e "${YELLOW}⚠️  Skipping download. You can download later with option [2] Update Dataset${NC}"
+            fi
         fi
+        
+        cd "$REPO_ROOT"
     fi
     echo ""
 
-    # Step 1.6: Verify setup
-    echo -e "${YELLOW}[6/6] Verifying setup...${NC}"
-
-    dvc remote list -v | grep -q "storage"
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✅ DVC remote configured correctly${NC}"
-    else
-        echo -e "${RED}❌ Warning: DVC remote not configured${NC}"
-    fi
-
-    DATASET_PATH="$REPO_ROOT/VesselVerse-Dataset/datasets/D-$SELECTED_DATASET"
+    # Step 1.7: Final verification
+    echo -e "${YELLOW}[7/8] Final verification...${NC}"
+    
+    DATASET_PATH="$DATASETS_DIR/D-$SELECTED_DATASET"
     if [ -d "$DATASET_PATH" ]; then
         echo -e "${GREEN}✅ Dataset directory exists: $DATASET_PATH${NC}"
     else
-        echo -e "${YELLOW}⚠️  Dataset directory not found (data may not be downloaded yet)${NC}"
+        echo -e "${YELLOW}⚠️  Dataset directory not found${NC}"
     fi
+    
+    # Check Git status for all datasets
+    echo -e "${CYAN}Git/DVC status per dataset:${NC}"
+    for dataset_path in "${ALL_DATASETS[@]}"; do
+        dataset_name=$(basename "$dataset_path")
+        cd "$dataset_path"
+        HAS_GIT="❌"
+        HAS_DVC="❌"
+        [ -d ".git" ] && HAS_GIT="✅"
+        [ -d ".dvc" ] && HAS_DVC="✅"
+        echo "  $dataset_name: Git $HAS_GIT | DVC $HAS_DVC"
+    done
+    
+    cd "$REPO_ROOT"
     echo ""
 
-    # Summary
+    # Step 1.8: Summary
+    echo -e "${YELLOW}[8/8] Setup Summary${NC}"
+    echo ""
     echo -e "${BLUE}═══════════════════════════════════════════════════${NC}"
     echo -e "${GREEN}          User Setup Complete! 🎉${NC}"
     echo -e "${BLUE}═══════════════════════════════════════════════════${NC}"
     echo ""
     echo -e "${BLUE}Configuration Summary:${NC}"
-    echo -e "  Credentials: ${GREEN}$SELECTED_CRED${NC}"
-    echo -e "  Dataset:     ${GREEN}$SELECTED_DATASET${NC}"
-    echo -e "  Path:        ${GREEN}$DATASET_PATH${NC}"
+    echo -e "  Credentials:       ${GREEN}$SELECTED_CRED${NC}"
+    echo -e "  Active Dataset:    ${GREEN}$SELECTED_DATASET${NC}"
+    echo -e "  Dataset Path:      ${GREEN}$DATASET_PATH${NC}"
+    echo -e "  Datasets Init:     ${GREEN}${#ALL_DATASETS[@]} total${NC}"
+    echo ""
+    echo -e "${CYAN}Initialized datasets:${NC}"
+    for dataset_path in "${ALL_DATASETS[@]}"; do
+        echo -e "  • $(basename "$dataset_path")"
+    done
     echo ""
 }
 
@@ -298,54 +374,67 @@ user_update_dataset() {
 
     # Load config
     source "$REPO_ROOT/config.sh"
-
-    # Step 2.2 : Check DVC config
-    if ! dvc remote list | grep -q "storage"; then
-        echo -e "${RED}❌ Error: DVC remotes not configured${NC}"
+    
+    if [ -z "$DATASET_NAME" ]; then
+        echo -e "${RED}❌ Error: No dataset selected${NC}"
         echo "Run option [1] Initial Setup first"
         return 1
     fi
-
-    # Step 2.3 : Update Git repo
-    echo -e "${YELLOW}[1/3] Updating Git repository...${NC}"
-    cd "$REPO_ROOT"
     
-    git pull
+    echo -e "${CYAN}Active dataset: $DATASET_NAME${NC}"
+    echo ""
+
+    # Define dataset directory
+    DATASET_DIR="$REPO_ROOT/VesselVerse-Dataset/datasets/D-$DATASET_NAME"
+    
+    if [ ! -d "$DATASET_DIR" ]; then
+        echo -e "${RED}❌ Error: Dataset directory not found: $DATASET_DIR${NC}"
+        return 1
+    fi
+
+    # Step 2.2 : Check DVC config in the dataset directory
+    cd "$DATASET_DIR"
+    
+    if ! dvc remote list 2>/dev/null | grep -q "storage"; then
+        echo -e "${RED}❌ Error: DVC remotes not configured for this dataset${NC}"
+        echo "Run option [1] Initial Setup first"
+        cd "$REPO_ROOT"
+        return 1
+    fi
+    
+    echo -e "${GREEN}✅ DVC remotes configured${NC}"
+    echo ""
+
+    # Step 2.3 : Update Git repo (for .dvc files)
+    echo -e "${YELLOW}[1/3] Updating Git repository...${NC}"
+    
+    git pull 2>/dev/null
     if [ $? -ne 0 ]; then
         echo -e "${YELLOW}⚠️  Warning: Git pull failed or had conflicts${NC}"
-        echo "Please resolve any conflicts manually"
+        echo "This dataset might not be tracked by Git remote yet"
     else
         echo -e "${GREEN}✅ Git repository updated${NC}"
     fi
     echo ""
 
-    # Step 2.4 : Verify data directory
-    echo -e "${YELLOW}[2/3] Checking data directory...${NC}"
-
-    # Use VESSELVERSE_DATA_IXI/data/ for .dvc files (not VesselVerse-Dataset which is dvc-ignored)
-    DATA_DIR="$REPO_ROOT/VESSELVERSE_DATA_IXI/data"
-
-    if [ ! -d "$DATA_DIR" ]; then
-        echo -e "${RED}❌ Error: Data directory not found: $DATA_DIR${NC}"
-        return 1
-    fi
-    echo -e "  Data directory: ${GREEN}$DATA_DIR${NC}"
-    echo ""
-
-    # Step 2.5 : Download updates
-    echo -e "${YELLOW}[3/3] Updating dataset from remote...${NC}"
-
-    # Check if there are .dvc files
-    DVC_FILES=($(find "$DATA_DIR" -maxdepth 1 -name "*.dvc" -type f))
+    # Step 2.4 : Download updates from DVC
+    echo -e "${YELLOW}[2/3] Checking for tracked data...${NC}"
+    
+    DVC_FILES=($(find . -maxdepth 1 -name "*.dvc" -type f 2>/dev/null))
     if [ ${#DVC_FILES[@]} -eq 0 ]; then
-        echo -e "${YELLOW}⚠️  No tracked data found in $DATA_DIR${NC}"
+        echo -e "${YELLOW}⚠️  No tracked data (.dvc files) found in this dataset${NC}"
+        cd "$REPO_ROOT"
         return 0
     fi
 
-    echo "Syncing ${#DVC_FILES[@]} tracked items..."
+    echo -e "Found ${#DVC_FILES[@]} tracked item(s)"
+    echo ""
     
-    # Run dvc pull from repo root where credentials are configured
-    cd "$REPO_ROOT"
+    # Step 2.5 : Download updates
+    echo -e "${YELLOW}[3/3] Updating dataset from remote...${NC}"
+    echo "Syncing ${#DVC_FILES[@]} tracked items..."
+    echo ""
+    
     TOTAL_SUCCESS=0
     TOTAL_FAILED=0
     
@@ -362,8 +451,11 @@ user_update_dataset() {
         fi
     done
 
+    cd "$REPO_ROOT"
+    echo ""
+
     if [ $TOTAL_FAILED -gt 0 ]; then
-        echo -e "${YELLOW}⚠️  Warning: Some files may have failed to download${NC}"
+        echo -e "${YELLOW}⚠️  Warning: $TOTAL_FAILED file(s) failed to download${NC}"
         echo "This is normal if some data is not yet available"
     else
         echo -e "${GREEN}✅ Dataset updated successfully${NC}"
@@ -378,6 +470,10 @@ user_update_dataset() {
     echo -e "${BLUE}Update Summary:${NC}"
     echo -e "  Dataset:      ${GREEN}$DATASET_NAME${NC}"
     echo -e "  Items synced: ${GREEN}${#DVC_FILES[@]}${NC}"
+    echo -e "  Successful:   ${GREEN}$TOTAL_SUCCESS${NC}"
+    if [ $TOTAL_FAILED -gt 0 ]; then
+        echo -e "  Failed:       ${YELLOW}$TOTAL_FAILED${NC}"
+    fi
     echo ""
 }
 
@@ -452,19 +548,50 @@ user_switch_dataset() {
     DOWNLOAD_NOW=${DOWNLOAD_NOW:-y}
 
     if [[ "$DOWNLOAD_NOW" =~ ^[Yy]$ ]]; then
-        # Use VESSELVERSE_DATA_IXI/data/ for .dvc files (not VesselVerse-Dataset which is dvc-ignored)
-        DATA_DIR="$REPO_ROOT/VESSELVERSE_DATA_IXI/data"
-        echo -e "${BLUE}Downloading data from: $DATA_DIR${NC}"
+        # Use the dataset directory where DVC files are located
+        DATASET_DIR="$REPO_ROOT/VesselVerse-Dataset/datasets/D-$SELECTED_DATASET"
+        echo -e "${BLUE}Downloading dataset from: $DATASET_DIR${NC}"
         
-        # Find .dvc files and pull from repo root
-        DVC_FILES=($(find "$DATA_DIR" -maxdepth 1 -name "*.dvc" -type f))
-        cd "$REPO_ROOT"
-        for dvc_file in "${DVC_FILES[@]}"; do
-            dvc_name=$(basename "$dvc_file" .dvc)
-            echo -e "${CYAN}Pulling: $dvc_name${NC}"
-            dvc pull "$dvc_file"
-        done
-        echo -e "${GREEN}✅ Download complete${NC}"
+        if [ ! -d "$DATASET_DIR" ]; then
+            echo -e "${RED}❌ Error: Dataset directory not found: $DATASET_DIR${NC}"
+        else
+            cd "$DATASET_DIR"
+            
+            # Find .dvc files in the dataset directory
+            DVC_FILES=($(find . -maxdepth 1 -name "*.dvc" -type f 2>/dev/null))
+            
+            if [ ${#DVC_FILES[@]} -eq 0 ]; then
+                echo -e "${YELLOW}⚠️  No tracked data (.dvc files) found in this dataset${NC}"
+            else
+                echo "Found ${#DVC_FILES[@]} tracked item(s)"
+                echo ""
+                
+                TOTAL_SUCCESS=0
+                TOTAL_FAILED=0
+                
+                for dvc_file in "${DVC_FILES[@]}"; do
+                    dvc_name=$(basename "$dvc_file" .dvc)
+                    echo -e "${CYAN}Pulling: $dvc_name${NC}"
+                    dvc pull "$dvc_file"
+                    if [ $? -eq 0 ]; then
+                        echo -e "${GREEN}  ✅ $dvc_name downloaded${NC}"
+                        ((TOTAL_SUCCESS++))
+                    else
+                        echo -e "${YELLOW}  ⚠️  $dvc_name - Failed to download${NC}"
+                        ((TOTAL_FAILED++))
+                    fi
+                done
+                
+                echo ""
+                if [ $TOTAL_FAILED -gt 0 ]; then
+                    echo -e "${YELLOW}⚠️  Warning: $TOTAL_FAILED file(s) failed to download${NC}"
+                else
+                    echo -e "${GREEN}✅ Dataset downloaded successfully${NC}"
+                fi
+            fi
+            
+            cd "$REPO_ROOT"
+        fi
     fi
     echo ""
 }
@@ -486,13 +613,36 @@ user_upload_data() {
 
     # Load config
     source "$REPO_ROOT/config.sh"
-
-    # Step 4.2: Check DVC config
-    if ! dvc remote list | grep -q "uploads"; then
-        echo -e "${RED}❌ Error: Upload remote not configured${NC}"
+    
+    if [ -z "$DATASET_NAME" ]; then
+        echo -e "${RED}❌ Error: No dataset selected${NC}"
         echo "Run option [1] Initial Setup first"
         return 1
     fi
+    
+    echo -e "${CYAN}Active dataset: $DATASET_NAME${NC}"
+    echo ""
+
+    # Define dataset directory
+    DATASET_DIR="$REPO_ROOT/VesselVerse-Dataset/datasets/D-$DATASET_NAME"
+    
+    if [ ! -d "$DATASET_DIR" ]; then
+        echo -e "${RED}❌ Error: Dataset directory not found: $DATASET_DIR${NC}"
+        return 1
+    fi
+
+    # Step 4.2: Check DVC config in the dataset directory
+    cd "$DATASET_DIR"
+    
+    if ! dvc remote list 2>/dev/null | grep -q "uploads"; then
+        echo -e "${RED}❌ Error: Upload remote not configured${NC}"
+        echo "Run option [1] Initial Setup first"
+        cd "$REPO_ROOT"
+        return 1
+    fi
+    
+    echo -e "${GREEN}✅ DVC remotes configured${NC}"
+    echo ""
 
     echo -e "${YELLOW}ℹ️  Upload Information${NC}"
     echo -e "  Your data will be uploaded to the shared 'uploads' folder."
@@ -500,20 +650,15 @@ user_upload_data() {
     echo -e "  Upload destination: ${CYAN}gdrive://$user_upload_ID${NC}"
     echo ""
 
-    # Step 4.3: Define source directory (same as owner)
-    DATA_PATH="VESSELVERSE_DATA_IXI/data"
-    DATA_DIR="$REPO_ROOT/$DATA_PATH"
-    
-    if [ ! -d "$DATA_DIR" ]; then
-        echo -e "${RED}❌ Error: Data directory not found: $DATA_DIR${NC}"
-        return 1
-    fi
+    # Step 4.3: Use dataset directory as source
+    # Data tracked by DVC is in the same directory as the .dvc files
+    DATA_DIR="$DATASET_DIR"
     
     echo -e "${CYAN}Source: $DATA_DIR${NC}"
     echo ""
 
     # Step 4.4: List available folders and let user select
-    echo -e "${YELLOW}[1/4] Listing available folders...${NC}"
+    echo -e "${YELLOW}[1/4] Listing available folders/files...${NC}"
     cd "$DATA_DIR"
     
     # Find all subdirectories (excluding hidden ones)
@@ -635,13 +780,13 @@ user_upload_data() {
     echo "This may take a while depending on data size..."
     echo ""
     
-    cd "$REPO_ROOT"
+    cd "$DATA_DIR"
     
     PUSH_SUCCESS=0
     PUSH_FAILED=0
     
     for folder in "${TRACKED_FOLDERS[@]}"; do
-        DVC_FILE="$DATA_DIR/$folder.dvc"
+        DVC_FILE="$folder.dvc"
         if [ -f "$DVC_FILE" ]; then
             echo -e "${CYAN}Uploading: $folder${NC}"
             # Push to 'uploads' remote (NOT the default 'storage')
@@ -655,6 +800,8 @@ user_upload_data() {
             fi
         fi
     done
+    
+    cd "$REPO_ROOT"
     echo ""
 
     # Summary
@@ -663,7 +810,8 @@ user_upload_data() {
     echo -e "${BLUE}═══════════════════════════════════════════════════${NC}"
     echo ""
     echo -e "${BLUE}Upload Summary:${NC}"
-    echo -e "  Source Directory:  ${GREEN}$DATA_PATH${NC}"
+    echo -e "  Dataset:           ${GREEN}$DATASET_NAME${NC}"
+    echo -e "  Source Directory:  ${GREEN}$DATA_DIR${NC}"
     echo -e "  Folders Uploaded:  ${GREEN}$PUSH_SUCCESS${NC}"
     if [ $PUSH_FAILED -gt 0 ]; then
         echo -e "  Failed:            ${RED}$PUSH_FAILED${NC}"

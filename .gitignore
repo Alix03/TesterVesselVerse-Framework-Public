@@ -67,3 +67,8 @@ credentials/*
 # DVC
 .dvc/tmp
 .dvc/cache
+
+# Data directories (tracked by DVC)
+VESSELVERSE_DATA_*/
+**/VESSELVERSE_DATA_*/
+VesselVerse-Framework/VESSELVERSE_DATA_*/
