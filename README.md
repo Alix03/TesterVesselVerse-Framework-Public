@@ -35,17 +35,17 @@ VesselVerse/
     ├── requirements.txt
     ├── toy_config.sh
     ├── scripts/
-    └── datasets/                    # Individual dataset repositories traced with DVC
-        ├── D-COW23MR/              # COW23MR dataset
-        │   ├── .git/               # Independent Git repository
-        │   ├── .dvc/               # DVC configuration
+    └── datasets/                    # Datasets managed in monorepo with independent DVC configs
+        ├── D-COW23MR/              # COW23MR dataset (12 tracked items)
+        │   ├── .dvc/               # Independent DVC configuration
         │   └── *.dvc               # DVC tracked files
         ├── D-ITKTubeTK/            # ITKTubeTK dataset
-        ├── D-IXI/                  # IXI dataset
-        │   ├── .git/
+        │   └── .dvc/
+        ├── D-IXI/                  # IXI dataset (4 tracked items)
         │   ├── .dvc/
         │   └── *.dvc
-        └── D-Prova/                # Test dataset
+        └── D-Prova/                # Test dataset (1 tracked item)
+            └── .dvc/
 ```
 
 ## 🎯 Key Components
@@ -57,11 +57,19 @@ VesselVerse/
 
 ### 2. **DVC Integration**
 
-Each dataset in `VesselVerse-Dataset/datasets/` is an independent Git+DVC repository:
+Each dataset in `VesselVerse-Dataset/datasets/` has independent DVC configuration:
 
-- Separate `.git` and `.dvc` directories
-- Google Drive remote storage
-- Individual version control per dataset
+- Single Git repository for entire project (monorepo architecture)
+- Each dataset maintains separate `.dvc` directory
+- Independent DVC remotes pointing to Google Drive storage
+- Simplified workflow: single `git clone` for complete project setup
+
+**Architecture Benefits:**
+
+- No Git submodules required
+- Single repository for all datasets
+- Each dataset has isolated DVC tracking
+- Simpler collaboration and onboarding
 
 ### 3. **3D Slicer Extension**
 
@@ -148,6 +156,37 @@ Main configuration in `config.sh`:
 ## 📄 License
 
 See individual LICENSE files in Framework and Dataset directories.
+
+---
+
+## 🔄 Recent Updates
+
+### Monorepo Architecture (January 2026)
+
+The project was converted from individual Git repositories per dataset to a unified monorepo structure:
+
+**Changes:**
+
+- ✅ Removed `.git` directories from individual datasets (D-IXI, D-COW23MR, D-ITKTubeTK, D-Prova)
+- ✅ All datasets now tracked in single main Git repository
+- ✅ Each dataset maintains independent DVC configuration (`.dvc/`)
+- ✅ Simplified `vesselverseUser.sh` and `vesselverseOwner.sh` scripts
+- ✅ DVC initialization now uses `--no-scm` flag (no Git requirement per dataset)
+- ✅ Removed Git submodule logic
+
+**Benefits:**
+
+- Single `git clone` for complete project setup
+- Simplified collaboration workflow
+- No submodule complexity
+- DVC functionality unchanged (pull/push work identically)
+- Easier onboarding for new contributors
+
+**Migration:**
+
+- Git history backed up in `.backup_git_datasets/`
+- All DVC remotes maintained
+- Zero downtime for data operations
 
 ---
 
