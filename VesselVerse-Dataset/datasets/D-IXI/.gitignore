@@ -66,3 +66,4 @@ scripts/restart_repo.sh
 **/*.nii
 **/*.nii.gz
 
+/IXI_TOT

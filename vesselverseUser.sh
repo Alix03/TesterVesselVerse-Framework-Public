@@ -706,80 +706,125 @@ user_upload_data() {
     echo -e "${GREEN}✅ Selected ${#SELECTED_FOLDERS[@]} folder(s) for upload${NC}"
     echo ""
 
-    # Step 4.5: Track folders with DVC (in DATA_DIR)
-    echo -e "${YELLOW}[2/4] Adding folders to DVC...${NC}"
+    # Step 4.5: Check for changes and track with DVC
+    echo -e "${YELLOW}[2/4] Checking for changes and adding to DVC...${NC}"
     
     TRACKED_FOLDERS=()
+    FOLDERS_WITH_CHANGES=()
+    FOLDERS_TO_COMMIT=()
+    
     for folder in "${SELECTED_FOLDERS[@]}"; do
         echo -e "${CYAN}Processing: $folder${NC}"
         
-        # Add to DVC (this creates folder.dvc and updates .gitignore)
-        echo "  Running: dvc add $folder"
-        dvc add "$folder"
-        if [ $? -eq 0 ]; then
-            echo -e "  ${GREEN}✅ Added $folder to DVC${NC}"
-            TRACKED_FOLDERS+=("$folder")
-        else
-            echo -e "  ${RED}❌ Failed to add $folder to DVC${NC}"
-        fi
-    done
-    echo ""
-
-    if [ ${#TRACKED_FOLDERS[@]} -eq 0 ]; then
-        echo -e "${RED}❌ No folders were tracked${NC}"
-        cd "$REPO_ROOT"
-        return 1
-    fi
-
-    # Step 4.6: Stage .dvc files and .gitignore for Git (in DATA_DIR)
-    echo -e "${YELLOW}[3/4] Staging .dvc files for Git...${NC}"
-    
-    for folder in "${TRACKED_FOLDERS[@]}"; do
+        # Check if folder is already tracked
         if [ -f "$folder.dvc" ]; then
-            echo "  Running: git add $folder.dvc"
-            git add "$folder.dvc"
-        fi
-    done
-    echo "  Running: git add .gitignore"
-    git add .gitignore 2>/dev/null || true
-    
-    echo -e "${GREEN}✅ Files staged${NC}"
-    echo ""
-
-    # Step 4.7: Commit to Git
-    echo -e "${YELLOW}[4/4] Committing and pushing...${NC}"
-    
-    read -p "Enter commit message [User upload: data contribution]: " COMMIT_MSG
-    COMMIT_MSG=${COMMIT_MSG:-"User upload: data contribution"}
-    
-    cd "$REPO_ROOT"
-    HAS_CHANGES=false
-    if git diff --cached --quiet; then
-        echo -e "${YELLOW}⚠️  No changes to commit${NC}"
-        echo -e "${YELLOW}ℹ️  The .dvc files are identical - data has not changed${NC}"
-        echo -e "${YELLOW}ℹ️  Skipping upload to avoid redundant push${NC}"
-    else
-        echo "  Running: git commit -m \"$COMMIT_MSG\""
-        git commit -m "$COMMIT_MSG"
-        if [ $? -eq 0 ]; then
-            echo -e "${GREEN}✅ Changes committed to Git${NC}"
-            HAS_CHANGES=true
+            # Run dvc add to update the .dvc file
+            echo "  Running: dvc add $folder"
+            dvc add "$folder" >/dev/null 2>&1
+            
+            # Check if the .dvc file was modified (local changes)
+            LOCAL_CHANGED=false
+            if ! git diff --quiet "$folder.dvc" 2>/dev/null; then
+                LOCAL_CHANGED=true
+            fi
+            
+            # Check if files exist in uploads remote
+            REMOTE_STATUS=$(dvc status -r uploads "$folder.dvc" 2>&1)
+            REMOTE_UP_TO_DATE=false
+            if echo "$REMOTE_STATUS" | grep -q "Data and pipelines are up to date"; then
+                REMOTE_UP_TO_DATE=true
+            fi
+            
+            # Decision logic: upload if local changed OR remote is not up to date
+            if [ "$LOCAL_CHANGED" = true ] && [ "$REMOTE_UP_TO_DATE" = true ]; then
+                echo -e "  ${GREEN}✅ Local changes detected - already in remote, will commit${NC}"
+                FOLDERS_WITH_CHANGES+=("$folder")
+                FOLDERS_TO_COMMIT+=("$folder")
+            elif [ "$LOCAL_CHANGED" = true ] && [ "$REMOTE_UP_TO_DATE" = false ]; then
+                echo -e "  ${GREEN}✅ Local changes detected - will upload to remote${NC}"
+                FOLDERS_WITH_CHANGES+=("$folder")
+                FOLDERS_TO_COMMIT+=("$folder")
+            elif [ "$LOCAL_CHANGED" = false ] && [ "$REMOTE_UP_TO_DATE" = false ]; then
+                echo -e "  ${GREEN}✅ Missing in remote - will upload (no commit needed)${NC}"
+                FOLDERS_WITH_CHANGES+=("$folder")
+                # NOT added to FOLDERS_TO_COMMIT - no git changes to commit
+            else
+                # Both local unchanged and remote up to date
+                echo -e "  ${YELLOW}⏭️  No changes detected - data synchronized${NC}"
+                continue
+            fi
         else
-            echo -e "${RED}❌ Git commit failed${NC}"
+            # New folder, not yet tracked
+            echo "  Running: dvc add $folder"
+            dvc add "$folder"
+            if [ $? -eq 0 ]; then
+                echo -e "  ${GREEN}✅ Added $folder to DVC${NC}"
+                FOLDERS_WITH_CHANGES+=("$folder")
+            else
+                echo -e "  ${RED}❌ Failed to add $folder to DVC${NC}"
+                continue
+            fi
         fi
-    fi
+        
+        TRACKED_FOLDERS+=("$folder")
+    done
     echo ""
 
-    # Step 4.8: Push ONLY if there were actual changes
-    if [ "$HAS_CHANGES" = false ]; then
-        echo -e "${BLUE}━━━ Upload Summary ━━━${NC}"
-        echo -e "${YELLOW}No new data to upload - everything is already synchronized${NC}"
+    if [ ${#FOLDERS_WITH_CHANGES[@]} -eq 0 ]; then
+        echo -e "${YELLOW}⚠️  No changes detected in any selected folder${NC}"
+        echo -e "${YELLOW}ℹ️  All data is already synchronized - nothing to upload${NC}"
         echo ""
         cd "$REPO_ROOT"
         return 0
     fi
     
-    # Step 4.8: Push ONLY selected folders to uploads remote
+    echo -e "${GREEN}✅ Found changes in ${#FOLDERS_WITH_CHANGES[@]} folder(s) to upload${NC}"
+    if [ ${#FOLDERS_TO_COMMIT[@]} -gt 0 ]; then
+        echo -e "${CYAN}   ${#FOLDERS_TO_COMMIT[@]} folder(s) with local changes need Git commit${NC}"
+    fi
+    echo ""
+
+    # Step 4.6: Stage only changed .dvc files for Git (only if there are changes to commit)
+    if [ ${#FOLDERS_TO_COMMIT[@]} -gt 0 ]; then
+        echo -e "${YELLOW}[3/4] Staging .dvc files for Git...${NC}"
+        
+        for folder in "${FOLDERS_TO_COMMIT[@]}"; do
+            if [ -f "$folder.dvc" ]; then
+                echo "  Running: git add $folder.dvc"
+                git add "$folder.dvc"
+            fi
+        done
+        echo "  Running: git add .gitignore"
+        git add .gitignore 2>/dev/null || true
+    else
+        echo -e "${YELLOW}[3/4] No Git changes to stage${NC}"
+        echo -e "${CYAN}   Files already synchronized, only remote push needed${NC}"
+    fi
+    echo ""
+
+    # Step 4.7: Commit to Git (only if there are changes to commit)
+    if [ ${#FOLDERS_TO_COMMIT[@]} -gt 0 ]; then
+        echo -e "${YELLOW}[4/4] Committing changes to Git...${NC}"
+        
+        read -p "Enter commit message [User upload: data contribution]: " COMMIT_MSG
+        COMMIT_MSG=${COMMIT_MSG:-"User upload: data contribution"}
+        
+        cd "$REPO_ROOT"
+        if git diff --cached --quiet; then
+            echo -e "${YELLOW}⚠️  No changes to commit (unexpected)${NC}"
+        else
+            echo "  Running: git commit -m \"$COMMIT_MSG\""
+            git commit -m "$COMMIT_MSG"
+            if [ $? -eq 0 ]; then
+                echo -e "${GREEN}✅ Changes committed to Git${NC}"
+            else
+                echo -e "${RED}❌ Git commit failed${NC}"
+            fi
+        fi
+        echo ""
+    fi
+
+    # Step 4.8: Push only changed folders to uploads remote
     echo -e "${BLUE}━━━ Pushing data to uploads remote ━━━${NC}"
     echo -e "Pushing to remote: ${CYAN}uploads (gdrive://$user_upload_ID)${NC}"
     echo "This may take a while depending on data size..."
@@ -789,16 +834,25 @@ user_upload_data() {
     
     PUSH_SUCCESS=0
     PUSH_FAILED=0
+    PUSH_SKIPPED=0
     
-    for folder in "${TRACKED_FOLDERS[@]}"; do
+    for folder in "${FOLDERS_WITH_CHANGES[@]}"; do
         DVC_FILE="$folder.dvc"
         if [ -f "$DVC_FILE" ]; then
             echo -e "${CYAN}Uploading: $folder${NC}"
             # Push to 'uploads' remote (NOT the default 'storage')
-            dvc push "$DVC_FILE" -r uploads
-            if [ $? -eq 0 ]; then
-                echo -e "${GREEN}  ✅ $folder uploaded${NC}"
-                ((PUSH_SUCCESS++))
+            PUSH_OUTPUT=$(dvc push "$DVC_FILE" -r uploads 2>&1)
+            PUSH_EXIT=$?
+            
+            if [ $PUSH_EXIT -eq 0 ]; then
+                # Check if anything was actually uploaded
+                if echo "$PUSH_OUTPUT" | grep -q "Everything is up to date"; then
+                    echo -e "${YELLOW}  ⏭️  $folder already in remote - skipped${NC}"
+                    ((PUSH_SKIPPED++))
+                else
+                    echo -e "${GREEN}  ✅ $folder uploaded${NC}"
+                    ((PUSH_SUCCESS++))
+                fi
             else
                 echo -e "${RED}  ❌ Failed to upload $folder${NC}"
                 ((PUSH_FAILED++))
@@ -817,18 +871,36 @@ user_upload_data() {
     echo -e "${BLUE}Upload Summary:${NC}"
     echo -e "  Dataset:           ${GREEN}$DATASET_NAME${NC}"
     echo -e "  Source Directory:  ${GREEN}$DATA_DIR${NC}"
-    echo -e "  Folders Uploaded:  ${GREEN}$PUSH_SUCCESS${NC}"
+    
+    if [ $PUSH_SUCCESS -gt 0 ]; then
+        echo -e "  Folders Uploaded:  ${GREEN}$PUSH_SUCCESS${NC}"
+    fi
+    if [ $PUSH_SKIPPED -gt 0 ]; then
+        echo -e "  Already in Remote: ${YELLOW}$PUSH_SKIPPED${NC}"
+    fi
     if [ $PUSH_FAILED -gt 0 ]; then
         echo -e "  Failed:            ${RED}$PUSH_FAILED${NC}"
     fi
-    for folder in "${TRACKED_FOLDERS[@]}"; do
-        echo -e "    • $folder"
-    done
+    
+    # Only show folder list if something was actually uploaded
+    if [ $PUSH_SUCCESS -gt 0 ]; then
+        echo ""
+        echo -e "${BLUE}Uploaded folders:${NC}"
+        for folder in "${FOLDERS_WITH_CHANGES[@]}"; do
+            echo -e "    • $folder"
+        done
+    fi
+    
     echo -e "  Upload Location:   ${CYAN}gdrive://$user_upload_ID${NC}"
     echo ""
-    echo -e "${YELLOW}ℹ️  Next steps:${NC}"
-    echo -e "  • Notify the dataset owner about your upload"
-    echo -e "  • The owner will review and integrate your contributions"
+    
+    if [ $PUSH_SUCCESS -gt 0 ]; then
+        echo -e "${YELLOW}ℹ️  Next steps:${NC}"
+        echo -e "  • Notify the dataset owner about your upload"
+        echo -e "  • The owner will review and integrate your contributions"
+    else
+        echo -e "${YELLOW}ℹ️  All data already synchronized - no action needed${NC}"
+    fi
     echo ""
 }
 user_main() {

@@ -576,22 +576,43 @@ owner_upload_dataset() {
     echo ""
 
     # Step 3.4: Track folders with DVC (in DATA_DIR)
-    echo -e "${YELLOW}[2/7] Adding folders to DVC...${NC}"
+    echo -e "${YELLOW}[2/7] Adding folders to DVC and checking changes...${NC}"
     
     cd "$DATA_DIR"
     
     TRACKED_FOLDERS=()
+    FOLDERS_TO_COMMIT=()
+    
     for folder in "${SELECTED_FOLDERS[@]}"; do
         echo -e "${CYAN}Processing: $folder${NC}"
         
-        # Add to DVC (this creates folder.dvc and updates .gitignore)
-        echo "  Running: dvc add $folder"
-        dvc add "$folder"
-        if [ $? -eq 0 ]; then
-            echo -e "  ${GREEN}✅ Added $folder to DVC${NC}"
-            TRACKED_FOLDERS+=("$folder")
+        # Check if folder is already tracked
+        if [ -f "$folder.dvc" ]; then
+            # Run dvc add to update the .dvc file
+            echo "  Running: dvc add $folder"
+            dvc add "$folder" >/dev/null 2>&1
+            
+            # Check if the .dvc file was modified
+            if git diff --quiet "$folder.dvc" 2>/dev/null; then
+                echo -e "  ${YELLOW}⏭️  No changes detected - data unchanged${NC}"
+                TRACKED_FOLDERS+=("$folder")
+                continue
+            else
+                echo -e "  ${GREEN}✅ Changes detected - will upload${NC}"
+                TRACKED_FOLDERS+=("$folder")
+                FOLDERS_TO_COMMIT+=("$folder")
+            fi
         else
-            echo -e "  ${RED}❌ Failed to add $folder to DVC${NC}"
+            # New folder, not yet tracked
+            echo "  Running: dvc add $folder"
+            dvc add "$folder"
+            if [ $? -eq 0 ]; then
+                echo -e "  ${GREEN}✅ Added $folder to DVC${NC}"
+                TRACKED_FOLDERS+=("$folder")
+                FOLDERS_TO_COMMIT+=("$folder")
+            else
+                echo -e "  ${RED}❌ Failed to add $folder to DVC${NC}"
+            fi
         fi
     done
     echo ""
@@ -601,40 +622,56 @@ owner_upload_dataset() {
         cd "$REPO_ROOT"
         return 1
     fi
-
-    # Step 3.5: Stage .dvc files and .gitignore for Git (in DATA_DIR)
-    echo -e "${YELLOW}[3/7] Staging .dvc files and .gitignore for Git...${NC}"
     
-    for folder in "${TRACKED_FOLDERS[@]}"; do
-        if [ -f "$folder.dvc" ]; then
-            echo "  Running: git add $folder.dvc"
-            git add "$folder.dvc"
-        fi
-    done
-    echo "  Running: git add .gitignore"
-    git add .gitignore 2>/dev/null || true
-    
-    echo -e "${GREEN}✅ Files staged${NC}"
+    echo -e "${GREEN}✅ Processed ${#TRACKED_FOLDERS[@]} folder(s)${NC}"
+    if [ ${#FOLDERS_TO_COMMIT[@]} -gt 0 ]; then
+        echo -e "${CYAN}   ${#FOLDERS_TO_COMMIT[@]} folder(s) with changes need Git commit${NC}"
+    else
+        echo -e "${YELLOW}   All folders already tracked - no Git changes to commit${NC}"
+    fi
     echo ""
 
-    # Step 3.6: Commit to Git (from DATA_DIR)
-    echo -e "${YELLOW}[4/7] Committing to Git...${NC}"
-    
-    read -p "Enter commit message for .dvc files: " COMMIT_MSG
-    COMMIT_MSG=${COMMIT_MSG:-"Track data with DVC"}
-    
-    if git diff --cached --quiet; then
-        echo -e "${YELLOW}⚠️  No changes to commit${NC}"
+    # Step 3.5: Stage .dvc files and .gitignore for Git (in DATA_DIR) - only if there are changes - only if there are changes
+    if [ ${#FOLDERS_TO_COMMIT[@]} -gt 0 ]; then
+        echo -e "${YELLOW}[3/7] Staging .dvc files and .gitignore for Git...${NC}"
+        
+        for folder in "${FOLDERS_TO_COMMIT[@]}"; do
+            if [ -f "$folder.dvc" ]; then
+                echo "  Running: git add $folder.dvc"
+                git add "$folder.dvc"
+            fi
+        done
+        echo "  Running: git add .gitignore"
+        git add .gitignore 2>/dev/null || true
+        
+        echo -e "${GREEN}✅ Files staged${NC}"
     else
-        echo "  Running: git commit -m \"$COMMIT_MSG\""
-        git commit -m "$COMMIT_MSG"
-        if [ $? -eq 0 ]; then
-            echo -e "${GREEN}✅ Changes committed to Git${NC}"
+        echo -e "${YELLOW}[3/7] Skipping Git staging - no changes to commit${NC}"
+    fi
+    echo ""
+
+    # Step 3.6: Commit to Git (from DATA_DIR) - only if there are changes
+    if [ ${#FOLDERS_TO_COMMIT[@]} -gt 0 ]; then
+        echo -e "${YELLOW}[4/7] Committing to Git...${NC}"
+        
+        read -p "Enter commit message for .dvc files: " COMMIT_MSG
+        COMMIT_MSG=${COMMIT_MSG:-"Track data with DVC"}
+        
+        if git diff --cached --quiet; then
+            echo -e "${YELLOW}⚠️  No changes to commit (unexpected)${NC}"
         else
-            echo -e "${RED}❌ Git commit failed${NC}"
-            cd "$REPO_ROOT"
-            return 1
+            echo "  Running: git commit -m \"$COMMIT_MSG\""
+            git commit -m "$COMMIT_MSG"
+            if [ $? -eq 0 ]; then
+                echo -e "${GREEN}✅ Changes committed to Git${NC}"
+            else
+                echo -e "${RED}❌ Git commit failed${NC}"
+                cd "$REPO_ROOT"
+                return 1
+            fi
         fi
+    else
+        echo -e "${YELLOW}[4/7] Skipping Git commit - no changes${NC}"
     fi
     echo ""
 
@@ -661,23 +698,36 @@ owner_upload_dataset() {
     # Push from repo root where DVC remotes are configured
     cd "$REPO_ROOT"
     
+    PUSH_SUCCESS=0
     PUSH_FAILED=0
+    PUSH_SKIPPED=0
+    
     for folder in "${TRACKED_FOLDERS[@]}"; do
         # Use the .dvc file from DATA_DIR (original location)
         DVC_FILE="$DATA_DIR/$folder.dvc"
         if [ -f "$DVC_FILE" ]; then
             echo -e "${CYAN}Pushing: $folder${NC}"
-            dvc push "$DVC_FILE"
-            if [ $? -ne 0 ]; then
-                echo -e "${RED}❌ Failed to push $folder${NC}"
-                PUSH_FAILED=1
+            PUSH_OUTPUT=$(dvc push "$DVC_FILE" 2>&1)
+            PUSH_EXIT=$?
+            
+            if [ $PUSH_EXIT -eq 0 ]; then
+                # Check if anything was actually uploaded
+                if echo "$PUSH_OUTPUT" | grep -q "Everything is up to date"; then
+                    echo -e "${YELLOW}  ⏭️  $folder already in remote - skipped${NC}"
+                    ((PUSH_SKIPPED++))
+                else
+                    echo -e "${GREEN}  ✅ $folder pushed to remote${NC}"
+                    ((PUSH_SUCCESS++))
+                fi
             else
-                echo -e "${GREEN}✅ $folder pushed to remote${NC}"
+                echo -e "${RED}  ❌ Failed to push $folder${NC}"
+                ((PUSH_FAILED++))
             fi
         fi
     done
     
-    if [ $PUSH_FAILED -eq 1 ]; then
+    echo ""
+    if [ $PUSH_FAILED -gt 0 ]; then
         echo -e "${YELLOW}⚠️  Some files failed to push${NC}"
         echo -e "${YELLOW}Possible reasons:${NC}"
         echo "  • Your credentials may not have write permissions"
@@ -685,8 +735,10 @@ owner_upload_dataset() {
         echo "  • Google Drive quota exceeded"
         cd "$REPO_ROOT"
         return 1
+    elif [ $PUSH_SUCCESS -gt 0 ]; then
+        echo -e "${GREEN}✅ Data pushed to DVC remote${NC}"
     else
-        echo -e "${GREEN}✅ All selected data pushed to DVC remote${NC}"
+        echo -e "${YELLOW}⚠️  All data already in remote - nothing to push${NC}"
     fi
     echo ""
 
@@ -735,10 +787,25 @@ owner_upload_dataset() {
     echo -e "${BLUE}Upload Summary:${NC}"
     echo -e "  Source Directory:  ${GREEN}$DATA_PATH${NC}"
     echo -e "  Dataset Directory: ${GREEN}$DATASET_DIR${NC}"
-    echo -e "  Folders Uploaded:  ${GREEN}${#TRACKED_FOLDERS[@]}${NC}"
-    for folder in "${TRACKED_FOLDERS[@]}"; do
-        echo -e "    • $folder"
-    done
+    echo -e "  Folders Processed: ${GREEN}${#TRACKED_FOLDERS[@]}${NC}"
+    
+    if [ $PUSH_SUCCESS -gt 0 ]; then
+        echo -e "  Uploaded:          ${GREEN}$PUSH_SUCCESS${NC}"
+    fi
+    if [ $PUSH_SKIPPED -gt 0 ]; then
+        echo -e "  Already in Remote: ${YELLOW}$PUSH_SKIPPED${NC}"
+    fi
+    if [ $PUSH_FAILED -gt 0 ]; then
+        echo -e "  Failed:            ${RED}$PUSH_FAILED${NC}"
+    fi
+    
+    if [ $PUSH_SUCCESS -gt 0 ] || [ ${#FOLDERS_TO_COMMIT[@]} -gt 0 ]; then
+        echo ""
+        echo -e "${BLUE}Folders with changes:${NC}"
+        for folder in "${FOLDERS_TO_COMMIT[@]}"; do
+            echo -e "    • $folder"
+        done
+    fi
     echo ""
     echo -e "${BLUE}What happened:${NC}"
     echo -e "  ✅ Data tracked with DVC (created .dvc files)"
