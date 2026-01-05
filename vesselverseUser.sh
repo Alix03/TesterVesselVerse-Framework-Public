@@ -753,19 +753,32 @@ user_upload_data() {
     COMMIT_MSG=${COMMIT_MSG:-"User upload: data contribution"}
     
     cd "$REPO_ROOT"
+    HAS_CHANGES=false
     if git diff --cached --quiet; then
         echo -e "${YELLOW}⚠️  No changes to commit${NC}"
+        echo -e "${YELLOW}ℹ️  The .dvc files are identical - data has not changed${NC}"
+        echo -e "${YELLOW}ℹ️  Skipping upload to avoid redundant push${NC}"
     else
         echo "  Running: git commit -m \"$COMMIT_MSG\""
         git commit -m "$COMMIT_MSG"
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}✅ Changes committed to Git${NC}"
+            HAS_CHANGES=true
         else
             echo -e "${RED}❌ Git commit failed${NC}"
         fi
     fi
     echo ""
 
+    # Step 4.8: Push ONLY if there were actual changes
+    if [ "$HAS_CHANGES" = false ]; then
+        echo -e "${BLUE}━━━ Upload Summary ━━━${NC}"
+        echo -e "${YELLOW}No new data to upload - everything is already synchronized${NC}"
+        echo ""
+        cd "$REPO_ROOT"
+        return 0
+    fi
+    
     # Step 4.8: Push ONLY selected folders to uploads remote
     echo -e "${BLUE}━━━ Pushing data to uploads remote ━━━${NC}"
     echo -e "Pushing to remote: ${CYAN}uploads (gdrive://$user_upload_ID)${NC}"
