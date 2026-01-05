@@ -112,7 +112,7 @@ Initial_owner_setup() {
     # Update config.sh with selected credentials
     sed -i.bak "s|owner_auth_path=.*|owner_auth_path=\"$SELECTED_CRED\"|g" "$REPO_ROOT/config.sh"
 
-    # Step 1.3 : Initialize all datasets (Git + DVC)
+    # Step 1.3 : Configure all datasets (DVC only - monorepo)
     echo -e "${YELLOW}[3/6] Initializing all datasets...${NC}"
     
     DATASETS_DIR="$REPO_ROOT/VesselVerse-Dataset/datasets"
@@ -136,7 +136,7 @@ Initial_owner_setup() {
     done
     echo ""
     
-    echo "Initializing Git and DVC for each dataset..."
+    echo "Configuring DVC for each dataset..."
     echo ""
     
     # Load config for database IDs
@@ -148,17 +148,9 @@ Initial_owner_setup() {
         
         cd "$dataset_path"
         
-        # Initialize Git if not present
-        if [ ! -d ".git" ]; then
-            git init >/dev/null 2>&1
-            echo "  ✓ Git initialized"
-        else
-            echo "  ✓ Git already initialized"
-        fi
-        
-        # Initialize DVC if not present
+        # Initialize DVC if not present (no Git needed - monorepo)
         if [ ! -d ".dvc" ]; then
-            dvc init >/dev/null 2>&1
+            dvc init --no-scm >/dev/null 2>&1
             dvc config core.autostage true >/dev/null 2>&1
             echo "  ✓ DVC initialized"
         else
@@ -187,7 +179,7 @@ Initial_owner_setup() {
     done
     
     cd "$REPO_ROOT"
-    echo -e "${GREEN}✅ All datasets initialized${NC}"
+    echo -e "${GREEN}✅ All datasets configured${NC}"
     echo ""
 
     # Step 1.4: Verify setup
@@ -257,16 +249,14 @@ Initial_owner_setup() {
     # Step 1.6: Final verification
     echo -e "${YELLOW}[6/6] Final verification...${NC}"
     
-    # Check Git status for all datasets
-    echo -e "${CYAN}Git/DVC status per dataset:${NC}"
+    # Check DVC status for all datasets
+    echo -e "${CYAN}DVC status per dataset:${NC}"
     for dataset_path in "${ALL_DATASETS[@]}"; do
         dataset_name=$(basename "$dataset_path")
         cd "$dataset_path"
-        HAS_GIT="❌"
         HAS_DVC="❌"
-        [ -d ".git" ] && HAS_GIT="✅"
         [ -d ".dvc" ] && HAS_DVC="✅"
-        echo "  $dataset_name: Git $HAS_GIT | DVC $HAS_DVC"
+        echo "  $dataset_name: DVC $HAS_DVC"
     done
     
     cd "$REPO_ROOT"

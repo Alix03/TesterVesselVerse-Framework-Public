@@ -110,21 +110,23 @@ user_initial_setup() {
     sed -i.bak "s|user_auth_path=.*|user_auth_path=\"$SELECTED_CRED\"|g" "$REPO_ROOT/config.sh"
     echo ""
 
-    # Step 1.3 : Initialize all datasets (Git + DVC)
-    echo -e "${YELLOW}[3/8] Initializing all datasets...${NC}"
+    # Step 1.3 : Initialize all datasets (DVC configuration)
+    echo -e "${YELLOW}[3/8] Configuring datasets...${NC}"
     
     DATASETS_DIR="$REPO_ROOT/VesselVerse-Dataset/datasets"
     
+    # Create datasets directory if it doesn't exist
     if [ ! -d "$DATASETS_DIR" ]; then
-        echo -e "${RED}❌ Error: Datasets directory not found: $DATASETS_DIR${NC}"
-        return 1
+        mkdir -p "$DATASETS_DIR"
+        echo "  ✓ Created datasets directory"
     fi
     
     # Find all datasets
     ALL_DATASETS=($(find "$DATASETS_DIR" -maxdepth 1 -type d -name "D-*" | sort))
     
     if [ ${#ALL_DATASETS[@]} -eq 0 ]; then
-        echo -e "${RED}❌ No datasets found in $DATASETS_DIR${NC}"
+        echo -e "${RED}❌ No datasets available in $DATASETS_DIR${NC}"
+        echo "Expected structure: VesselVerse-Dataset/datasets/D-<name>/"
         return 1
     fi
     
@@ -134,7 +136,7 @@ user_initial_setup() {
     done
     echo ""
     
-    echo "Initializing Git and DVC for each dataset..."
+    echo "Configuring DVC for each dataset..."
     echo ""
     
     # Load config for database IDs
@@ -146,17 +148,9 @@ user_initial_setup() {
         
         cd "$dataset_path"
         
-        # Initialize Git if not present
-        if [ ! -d ".git" ]; then
-            git init >/dev/null 2>&1
-            echo "  ✓ Git initialized"
-        else
-            echo "  ✓ Git already initialized"
-        fi
-        
         # Initialize DVC if not present
         if [ ! -d ".dvc" ]; then
-            dvc init >/dev/null 2>&1
+            dvc init --no-scm >/dev/null 2>&1
             dvc config core.autostage true >/dev/null 2>&1
             echo "  ✓ DVC initialized"
         else
@@ -185,7 +179,7 @@ user_initial_setup() {
     done
     
     cd "$REPO_ROOT"
-    echo -e "${GREEN}✅ All datasets initialized${NC}"
+    echo -e "${GREEN}✅ All datasets configured${NC}"
     echo ""
 
     # Step 1.4 : Select dataset to use
@@ -322,16 +316,14 @@ user_initial_setup() {
         echo -e "${YELLOW}⚠️  Dataset directory not found${NC}"
     fi
     
-    # Check Git status for all datasets
-    echo -e "${CYAN}Git/DVC status per dataset:${NC}"
+    # Check DVC status for all datasets
+    echo -e "${CYAN}DVC status per dataset:${NC}"
     for dataset_path in "${ALL_DATASETS[@]}"; do
         dataset_name=$(basename "$dataset_path")
         cd "$dataset_path"
-        HAS_GIT="❌"
         HAS_DVC="❌"
-        [ -d ".git" ] && HAS_GIT="✅"
         [ -d ".dvc" ] && HAS_DVC="✅"
-        echo "  $dataset_name: Git $HAS_GIT | DVC $HAS_DVC"
+        echo "  $dataset_name: DVC $HAS_DVC"
     done
     
     cd "$REPO_ROOT"
