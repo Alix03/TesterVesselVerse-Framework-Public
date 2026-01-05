@@ -568,7 +568,7 @@ class VesselVerseWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         
         self.imagePathSelector = ctk.ctkPathLineEdit()
         self.imagePathSelector.filters = ctk.ctkPathLineEdit.Files
-        self.imagePathSelector.nameFilters = ["Image files (*.nii.gz)"]
+        self.imagePathSelector.nameFilters = ["Image files (*.nii.gz *.nii)"]
         # Find and modify the QToolButton
         for widget in self.imagePathSelector.findChildren(qt.QToolButton):
             widget.setText("▼")
@@ -807,12 +807,11 @@ class VesselVerseWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             print(f"Selected Dataset: {selectedDataset}")
             print(f"Base Path: {base_path}")
             
-            if 'IXI' in str(base_path):
-                base_path_selector = Path(base_path) / 'IXI_TOT'
-            elif 'COW' in str(base_path):
-                base_path_selector = Path(base_path) / 'COW_TOT'
+            # Use image_dir from dataset config
+            if dataset_config.image_dir:
+                base_path_selector = Path(base_path) / dataset_config.image_dir
             else:
-                assert(), f"Unknown dataset: {base_path}"
+                base_path_selector = Path(base_path)
             
             self.logic.setDataset(base_path)  # Pass base_path instead of just the name
             # Update UI components
@@ -853,14 +852,11 @@ class VesselVerseWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         print("\n\n\n\n\n")
         self.logic.setDataset(base_path)
 
-        # Update image selector path
-        if "IXI" in str(base_path):
-            self.imagePathSelector.setCurrentPath(str(base_path / "IXI_TOT"))
-        elif "COW" in str(base_path):
-            self.imagePathSelector.setCurrentPath(str(base_path / "COW_TOT"))
+        # Update image selector path using dataset config
+        if dataset_config.image_dir:
+            self.imagePathSelector.setCurrentPath(str(base_path / dataset_config.image_dir))
         else:
-            slicer.util.errorDisplay(f"Error: Unknown dataset '{selectedDataset}'")
-            return
+            self.imagePathSelector.setCurrentPath(str(base_path))
         # Update segmentation models
         supported_models = [model for model in dataset_config.supported_models if '_TOT' not in model]
         self.modelSelector.clear()

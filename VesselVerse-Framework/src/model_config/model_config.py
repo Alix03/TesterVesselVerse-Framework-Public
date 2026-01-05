@@ -60,125 +60,114 @@ class DatasetRegistry:
         # Go up from src/model_config/ to VesselVerse-Framework/
         repo_root = Path(__file__).resolve().parent.parent.parent
         
-        ixi_config = DatasetConfig(
-            name="IXI",
-            unique_name="IXI",
-            base_path=repo_root / "VESSELVERSE_DATA_IXI" / "data",
-            image_dir="IXI_TOT",
-            image_suffix="nii.gz",
-            modality="MR",
-            supported_models=[
-                "IXI_TOT",
-                "STAPLE", "STAPLE_base",
-                "StochasticAL", 
-                "nnUNet",
-                "A2V",
-                "Filtering", 
-                "ExpertAnnotations", "ExpertVAL"
-            ]
-        )
+        # Try to load datasets from VesselVerse-Dataset/datasets/
+        datasets_root = repo_root.parent / "VesselVerse-Dataset" / "datasets"
         
-        topcow_config_23_CT = DatasetConfig(
-            name="COW",
-            unique_name="301_CT23",
-            base_path=repo_root / "VESSELVERSE_DATA_COW" / "data" / "301_CT23",
-            image_dir="COW_TOT",
-            image_suffix="nii.gz",
-            modality="CT",
-            year="23",
-            supported_models=[
-                "COW_TOT",
-                "STAPLE", "STAPLE_base",
-                "A2V",
-                "COW_SEG",
-                "JOB-VS",
-                "ExpertAnnotations", "ExpertVAL"
-            ]
-        )
+        if datasets_root.exists():
+            # Dynamically discover and register datasets from VesselVerse-Dataset
+            import os
+            for dataset_dir in datasets_root.glob("D-*"):
+                if dataset_dir.is_dir():
+                    dataset_name = dataset_dir.name[2:]  # Remove "D-" prefix
+                    
+                    # Register based on dataset name pattern
+                    if dataset_name == "IXI":
+                        ixi_config = DatasetConfig(
+                            name="IXI",
+                            unique_name="IXI",
+                            base_path=dataset_dir,
+                            image_dir="",
+                            image_suffix="nii.gz",
+                            modality="MR",
+                            supported_models=[
+                                "IXI_TOT",
+                                "STAPLE", "STAPLE_base",
+                                "StochasticAL", 
+                                "nnUNet",
+                                "A2V",
+                                "Filtering", 
+                                "ExpertAnnotations", "ExpertVAL"
+                            ]
+                        )
+                        self.register_dataset(ixi_config)
+                        
+                    elif dataset_name == "COW23MR":
+                        cow23mr_config = DatasetConfig(
+                            name="COW",
+                            unique_name="302_MR23",
+                            base_path=dataset_dir,
+                            image_dir="",
+                            image_suffix="nii.gz",
+                            modality="MR",
+                            year="23",
+                            supported_models=[
+                                "COW_TOT",
+                                "STAPLE", "STAPLE_base",
+                                "A2V",
+                                "StochasticAL",
+                                "nnUNet",
+                                "COW_SEG",
+                                "JOB-VS",
+                                "JOB-VS-SHINY-1", 
+                                "JOB-VS-SHINY-2",
+                                "ExpertAnnotations", 
+                                "ExpertVAL"
+                            ]
+                        )
+                        self.register_dataset(cow23mr_config)
+                        
+                    elif dataset_name == "ITKTubeTK":
+                        itk_config = DatasetConfig(
+                            name="ITKTubeTK",
+                            unique_name="ITKTubeTK",
+                            base_path=dataset_dir,
+                            image_dir="",
+                            image_suffix="nii.gz",
+                            modality="MR",
+                            supported_models=[
+                                "ITK_TOT",
+                                "STAPLE", "STAPLE_base",
+                                "ExpertAnnotations", "ExpertVAL"
+                            ]
+                        )
+                        self.register_dataset(itk_config)
+                        
+                    elif dataset_name == "Prova":
+                        prova_config = DatasetConfig(
+                            name="Prova",
+                            unique_name="Prova",
+                            base_path=dataset_dir,
+                            image_dir="",
+                            image_suffix="nii.gz",
+                            modality="MR",
+                            supported_models=[
+                                "PROVA_TOT",
+                                "STAPLE",
+                                "ExpertAnnotations"
+                            ]
+                        )
+                        self.register_dataset(prova_config)
+        else:
+            # Fallback to old behavior for backward compatibility
+            ixi_config = DatasetConfig(
+                name="IXI",
+                unique_name="IXI",
+                base_path=repo_root / "VESSELVERSE_DATA_IXI" / "data",
+                image_dir="IXI_TOT",
+                image_suffix="nii.gz",
+                modality="MR",
+                supported_models=[
+                    "IXI_TOT",
+                    "STAPLE", "STAPLE_base",
+                    "StochasticAL", 
+                    "nnUNet",
+                    "A2V",
+                    "Filtering", 
+                    "ExpertAnnotations", "ExpertVAL"
+                ]
+            )
+            self.register_dataset(ixi_config)
         
-        topcow_config_23_MR = DatasetConfig(
-            name="COW",
-            unique_name="302_MR23",
-            base_path=repo_root / "VESSELVERSE_DATA_COW" / "302_MR23" / "data",
-            image_dir="COW_TOT",
-            image_suffix="nii.gz",
-            modality="MR",
-            year="23",
-            supported_models=[
-                "COW_TOT",
-                "STAPLE", "STAPLE_base",
-                "A2V",
-                "StochasticAL",
-                "nnUNet",
-                "COW_SEG",
-                "JOB-VS",
-                "JOB-VS-SHINY-1", 
-                "JOB-VS-SHINY-2",
-                "ExpertAnnotations", 
-                "ExpertVAL"
-            ]
-        )
-        
-        topcow_config_24_CT = DatasetConfig(
-            name="COW",
-            unique_name="303_CT24",
-            base_path=Path("data/TOPCOW/303_CT24"),
-            image_dir="COW_TOT",
-            image_suffix="nii.gz",
-            modality="CT",
-            year="24",
-            supported_models=[
-                "COW_TOT",
-                "STAPLE", "STAPLE_base",
-                #"A2V",
-                "COW_SEG",
-                "JOB-VS",
-                "ExpertAnnotations", "ExpertVAL"
-            ]
-        )
-        
-        topcow_config_24_MR = DatasetConfig(
-            name="COW",
-            unique_name="304_MR24",
-            base_path=Path("data/TOPCOW/304_MR24"),
-            image_dir="COW_TOT",
-            image_suffix="nii.gz",
-            modality="MR",
-            year="24",
-            supported_models=[
-                "COW_TOT",
-                "STAPLE", "STAPLE_base",
-                #"A2V",
-                "COW_SEG",
-                "JOB-VS",
-                "JOB-VS-SHINY-1",
-                "ExpertAnnotations", "ExpertVAL"
-            ]
-        )
-        
-        ixi_costa_config = DatasetConfig(
-            name="IXI",
-            unique_name="IXI_COSTA",
-            base_path=repo_root / "VESSELVERSE_DATA_IXI" / "IXI_ANNOT",
-            image_dir="IXI_TOT",
-            image_suffix="nii.gz",
-            modality="MR",
-            supported_models=[
-                "IXI_TOT",
-                "IXI_EXP", 
-                "COSTA",
-                "ExpertAnnotations", "ExpertVAL"
-            ]
-        )
-
-        
-        self.register_dataset(ixi_config)
-        self.register_dataset(topcow_config_23_CT)
-        self.register_dataset(topcow_config_23_MR)
-        self.register_dataset(topcow_config_24_CT)
-        self.register_dataset(topcow_config_24_MR)
-        
-        self.register_dataset(ixi_costa_config)
         ################################################################################################################################
         ################################################################################################################################
         ################################################################################################################################
