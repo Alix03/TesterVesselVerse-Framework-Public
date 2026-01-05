@@ -68,7 +68,8 @@ credentials/*
 .dvc/tmp
 .dvc/cache
 
-# Data directories (tracked by DVC)
-VESSELVERSE_DATA_*/
-**/VESSELVERSE_DATA_*/
-VesselVerse-Framework/VESSELVERSE_DATA_*/
+# Data files (track folders but not their contents)
+VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/*
+!VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/*/
+VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/*/**
+!VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/**/.gitkeep
