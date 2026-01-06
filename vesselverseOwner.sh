@@ -12,10 +12,20 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DATASET_GIT_ROOT="$REPO_ROOT/VesselVerse-Dataset"
 
-# Activate venv if it exists (fixes Python 3.9 importlib.metadata issue)
+# Create and activate venv if not exists
+if [ ! -d "$REPO_ROOT/.venv" ]; then
+    echo -e "${YELLOW}Creating virtual environment...${NC}"
+    python3 -m venv "$REPO_ROOT/.venv"
+fi
+
+# Activate venv
 if [ -f "$REPO_ROOT/.venv/bin/activate" ]; then
     source "$REPO_ROOT/.venv/bin/activate" 2>/dev/null || true
+else
+    echo -e "${RED}❌ Error: Failed to create virtual environment${NC}"
+    exit 1
 fi
 
 # Display header
@@ -54,16 +64,16 @@ Initial_owner_setup() {
         echo "Please install Python 3.10+ first"
         exit 1
     fi
-   # dvc
-    if ! command -v dvc &> /dev/null; then
-        echo -e "${YELLOW}⚠️  DVC is not installed. Installing now...${NC}"
-        python3 -m pip install "dvc[gdrive]"
+   # dvc (check in venv)
+    if ! python -c "import dvc.cli" 2>/dev/null; then
+        echo -e "${YELLOW}⚠️  DVC is not installed in venv. Installing now...${NC}"
+        python -m pip install "dvc[gdrive]"
     fi
 
     # g-drive
-    if ! python3 -c "import dvc_gdrive" 2>/dev/null; then
+    if ! python -c "import dvc_gdrive" 2>/dev/null; then
         echo -e "${YELLOW}⚠️  DVC is installed but missing gdrive support. Installing now...${NC}"
-        python3 -m pip install "dvc[gdrive]" >/dev/null 2>&1
+        python -m pip install "dvc[gdrive]" >/dev/null 2>&1
     fi
     # git
     if ! command -v git &> /dev/null; then
@@ -150,28 +160,28 @@ Initial_owner_setup() {
         
         # Initialize DVC if not present (no Git needed - monorepo)
         if [ ! -d ".dvc" ]; then
-            dvc init --no-scm >/dev/null 2>&1
-            dvc config core.autostage true >/dev/null 2>&1
+            python -m dvc init --no-scm >/dev/null 2>&1
+            python -m dvc config core.autostage true >/dev/null 2>&1
             echo "  ✓ DVC initialized"
         else
             echo "  ✓ DVC already initialized"
         fi
         
         # Configure DVC remotes
-        dvc remote list | grep -q "^storage" && dvc remote remove storage 2>/dev/null || true
-        dvc remote list | grep -q "^uploads" && dvc remote remove uploads 2>/dev/null || true
+        python -m dvc remote list | grep -q "^storage" && python -m dvc remote remove storage 2>/dev/null || true
+        python -m dvc remote list | grep -q "^uploads" && python -m dvc remote remove uploads 2>/dev/null || true
         
         if [ -n "$database_ID" ] && [ -n "$SELECTED_CRED" ]; then
-            dvc remote add -d storage "gdrive://${database_ID}" >/dev/null 2>&1
-            dvc remote modify storage gdrive_service_account_json_file_path "$SELECTED_CRED" >/dev/null 2>&1
-            dvc remote modify storage gdrive_use_service_account true >/dev/null 2>&1
+            python -m dvc remote add -d storage "gdrive://${database_ID}" >/dev/null 2>&1
+            python -m dvc remote modify storage gdrive_service_account_json_file_path "$SELECTED_CRED" >/dev/null 2>&1
+            python -m dvc remote modify storage gdrive_use_service_account true >/dev/null 2>&1
             echo "  ✓ Storage remote configured"
         fi
         
         if [ -n "$user_upload_ID" ] && [ -n "$SELECTED_CRED" ]; then
-            dvc remote add uploads "gdrive://${user_upload_ID}" >/dev/null 2>&1
-            dvc remote modify uploads gdrive_service_account_json_file_path "$SELECTED_CRED" >/dev/null 2>&1
-            dvc remote modify uploads gdrive_use_service_account true >/dev/null 2>&1
+            python -m dvc remote add uploads "gdrive://${user_upload_ID}" >/dev/null 2>&1
+            python -m dvc remote modify uploads gdrive_service_account_json_file_path "$SELECTED_CRED" >/dev/null 2>&1
+            python -m dvc remote modify uploads gdrive_use_service_account true >/dev/null 2>&1
             echo "  ✓ Uploads remote configured"
         fi
         
@@ -189,7 +199,7 @@ Initial_owner_setup() {
     CONFIGURED_COUNT=0
     for dataset_path in "${ALL_DATASETS[@]}"; do
         cd "$dataset_path"
-        if dvc remote list 2>/dev/null | grep -q "storage"; then
+        if python -m dvc remote list 2>/dev/null | grep -q "storage"; then
             ((CONFIGURED_COUNT++))
         fi
     done
@@ -319,7 +329,7 @@ owner_update_dataset() {
     # Step 2.2 : Check DVC config in the dataset directory
     cd "$DATASET_DIR"
     
-    if ! dvc remote list 2>/dev/null | grep -q "storage"; then
+    if ! python -m dvc remote list 2>/dev/null | grep -q "storage"; then
         echo -e "${RED}❌ Error: DVC remotes not configured for this dataset${NC}"
         echo "Run option [1] Initial Setup first"
         cd "$REPO_ROOT"
@@ -332,6 +342,7 @@ owner_update_dataset() {
     # Step 2.3 : Update Git Repo
     echo -e "${YELLOW}[1/3] Updating Git repository...${NC}"
     
+    cd "$DATASET_GIT_ROOT"
     git pull 2>/dev/null
     if [ $? -ne 0 ]; then
         echo -e "${YELLOW}⚠️  Warning: Git pull failed or had conflicts${NC}"
@@ -339,6 +350,7 @@ owner_update_dataset() {
     else
         echo -e "${GREEN}✅ Git repository updated${NC}"
     fi
+    cd "$DATASET_DIR"
     echo ""
 
     # Step 2.4: Check for tracked data
@@ -366,7 +378,7 @@ owner_update_dataset() {
     for dvc_file in "${DVC_FILES[@]}"; do
         dvc_name=$(basename "$dvc_file" .dvc)
         echo -e "${CYAN}Pulling: $dvc_name${NC}"
-        dvc pull "$dvc_file"
+        python -m dvc pull "$dvc_file"
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}  ✅ $dvc_name downloaded${NC}"
             ((TOTAL_SUCCESS++))
@@ -420,7 +432,7 @@ owner_upload_dataset() {
     source "$REPO_ROOT/config.sh"
 
     # Step 3.2: Check DVC config
-    if ! dvc remote list | grep -q "storage"; then
+    if ! python -m dvc remote list | grep -q "storage"; then
         echo -e "${RED}❌ Error: DVC remotes not configured${NC}"
         echo "Run option [1] Initial Setup first"
         return 1
@@ -465,28 +477,35 @@ owner_upload_dataset() {
     echo -e "${GREEN}Target dataset: $SELECTED_DATASET${NC}"
     echo ""
 
-    # TODO: Update database_ID based on selected dataset
-    # case "$SELECTED_DATASET" in
-    #     "D-IXI")
-    #         database_ID='1Lt5rGwBPkmdXGeGmpNKrzZ07xJzY_yYv'
-    #         user_upload_ID='1PoD3eV41h_EWb1uDuMNGlfIUg8gi5_8a'
-    #         echo -e "${CYAN}Using IXI remote: gdrive://$database_ID${NC}"
-    #         ;;
-    #     "D-COW23MR")
-    #         database_ID='1jBDBZb8MNNXpGGWe0nTeOLlK_KIIW60p'
-    #         user_upload_ID='1mdgCXcgNuLtP6YkCNyWbkNCbPiG0AHzZ'  # SwiftCheetah for COW23MR
-    #         echo -e "${CYAN}Using COW23MR remote: gdrive://$database_ID${NC}"
-    #         ;;
-    #     *)
-    #         echo -e "${YELLOW}⚠️  Unknown dataset, using default remote from config.sh${NC}"
-    #         ;;
-    # esac
-    # 
-    # # Update DVC remotes with new database_ID
-    # dvc remote modify storage url "gdrive://${database_ID}"
-    # dvc remote modify uploads url "gdrive://${user_upload_ID}"
-    # echo -e "${GREEN}✅ DVC remotes updated for $SELECTED_DATASET${NC}"
-    # echo ""
+    # Update database_ID and user_upload_ID based on selected dataset
+    DATASET_SHORT="${SELECTED_DATASET#D-}"  # Remove D- prefix
+    
+    case "$DATASET_SHORT" in
+        "IXI")
+            database_ID="$IXI_STORAGE_ID"
+            user_upload_ID="${IXI_STORAGE_ID}"  # No separate upload for IXI yet
+            ;;
+        "COW23MR")
+            database_ID="$COW23MR_STORAGE_ID"
+            user_upload_ID="${COW23MR_STORAGE_ID}"  # No separate upload for COW23MR yet
+            ;;
+        "ITKTubeTK")
+            database_ID="$ITKTubeTK_STORAGE_ID"
+            user_upload_ID="${ITKTubeTK_STORAGE_ID}"  # No separate upload for ITKTubeTK yet
+            ;;
+        "Prova")
+            database_ID="$Prova_STORAGE_ID"
+            user_upload_ID="$Prova_UPLOAD_ID"  # Prova has both storage and upload
+            ;;
+        *)
+            echo -e "${YELLOW}⚠️  Unknown dataset, using default IDs from config.sh${NC}"
+            ;;
+    esac
+    
+    echo -e "${CYAN}Using remotes:${NC}"
+    echo -e "  Storage: gdrive://$database_ID"
+    echo -e "  Uploads: gdrive://$user_upload_ID"
+    echo ""
 
     # Define source directory
     DATA_PATH="VESSELVERSE_DATA_IXI/data"
@@ -589,8 +608,8 @@ owner_upload_dataset() {
         # Check if folder is already tracked
         if [ -f "$folder.dvc" ]; then
             # Run dvc add to update the .dvc file
-            echo "  Running: dvc add $folder"
-            dvc add "$folder" >/dev/null 2>&1
+            echo "  Running: python -m dvc add $folder"
+            python -m dvc add "$folder" >/dev/null 2>&1
             
             # Check if the .dvc file was modified
             if git diff --quiet "$folder.dvc" 2>/dev/null; then
@@ -604,8 +623,8 @@ owner_upload_dataset() {
             fi
         else
             # New folder, not yet tracked
-            echo "  Running: dvc add $folder"
-            dvc add "$folder"
+            echo "  Running: python -m dvc add $folder"
+            python -m dvc add "$folder"
             if [ $? -eq 0 ]; then
                 echo -e "  ${GREEN}✅ Added $folder to DVC${NC}"
                 TRACKED_FOLDERS+=("$folder")
@@ -707,7 +726,7 @@ owner_upload_dataset() {
         DVC_FILE="$DATA_DIR/$folder.dvc"
         if [ -f "$DVC_FILE" ]; then
             echo -e "${CYAN}Pushing: $folder${NC}"
-            PUSH_OUTPUT=$(dvc push "$DVC_FILE" 2>&1)
+            PUSH_OUTPUT=$(python -m dvc push "$DVC_FILE" 2>&1)
             PUSH_EXIT=$?
             
             if [ $PUSH_EXIT -eq 0 ]; then
@@ -745,11 +764,11 @@ owner_upload_dataset() {
     # Step 3.9: Stage and push .dvc files to Git remote
     echo -e "${YELLOW}[7/7] Pushing .dvc files to Git remote...${NC}"
     
-    cd "$REPO_ROOT"
+    cd "$DATASET_GIT_ROOT"
     
     # Stage the .dvc files in the dataset directory
     for folder in "${TRACKED_FOLDERS[@]}"; do
-        DVC_FILE="VesselVerse-Dataset/datasets/$SELECTED_DATASET/$folder.dvc"
+        DVC_FILE="datasets/$SELECTED_DATASET/$folder.dvc"
         if [ -f "$DVC_FILE" ]; then
             echo "  Running: git add $DVC_FILE"
             git add "$DVC_FILE"
@@ -839,7 +858,7 @@ owner_review_user_uploads() {
     source "$REPO_ROOT/config.sh"
 
     # Step 4.2: Check DVC config
-    if ! dvc remote list | grep -q "uploads"; then
+    if ! python -m dvc remote list | grep -q "uploads"; then
         echo -e "${RED}❌ Error: Uploads remote not configured${NC}"
         echo "Run option [1] Initial Setup first"
         return 1
@@ -855,7 +874,7 @@ owner_review_user_uploads() {
 
     # Step 4.3: Update Git first to get .dvc files
     echo -e "${YELLOW}[1/3] Updating Git repository (to get .dvc pointer files)...${NC}"
-    cd "$REPO_ROOT"
+    cd "$DATASET_GIT_ROOT"
     git pull
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✅ Git repository updated${NC}"
@@ -892,7 +911,7 @@ owner_review_user_uploads() {
     cd "$REPO_ROOT"
     
     # Pull from uploads remote
-    dvc pull -r uploads 2>&1
+    python -m dvc pull -r uploads 2>&1
     PULL_RESULT=$?
     
     echo ""
