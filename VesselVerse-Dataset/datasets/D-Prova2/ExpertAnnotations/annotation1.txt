@@ -1,0 +1,3 @@
+Dataset di prova 2 - Expert Annotation 1
+Questo file simula una annotazione esperta per il dataset D-Prova2.
+Contenuto fittizio per testare DVC tracking.

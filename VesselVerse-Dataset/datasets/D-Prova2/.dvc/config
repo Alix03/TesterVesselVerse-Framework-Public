@@ -1,0 +1,12 @@
+[core]
+    no_scm = True
+    autostage = true
+    remote = storage
+['remote "storage"']
+    url = gdrive://1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi
+    gdrive_service_account_json_file_path = /Users/aliceboccadifuoco/Desktop/VesselVerse/credentials/vesselverse25-9f62c69233a4.json
+    gdrive_use_service_account = true
+['remote "uploads"']
+    url = gdrive://1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi
+    gdrive_service_account_json_file_path = /Users/aliceboccadifuoco/Desktop/VesselVerse/credentials/vesselverse25-9f62c69233a4.json
+    gdrive_use_service_account = true
