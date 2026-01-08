@@ -26,12 +26,12 @@ case "$(uname -s)" in
 esac
 
 # Credential paths (relative to REPO_ROOT for portability)
-owner_auth_path="/Users/aliceboccadifuoco/Desktop/VesselVerse/credentials/vesselverse25-9f62c69233a4.json"
-user_auth_path="$REPO_ROOT/credentials/vesselverse25-141593c63cd7.json"
-DATASET_NAME='Prova'
+owner_auth_path="/Users/aliceboccadifuoco/Desktop/VesselVerse/credentials/vesselverse25-141593c63cd7.json"
+user_auth_path="/Users/aliceboccadifuoco/Desktop/VesselVerse/credentials/vesselverse25-141593c63cd7.json"
+DATASET_NAME='Prova2'
 DATASET_PATH="$REPO_ROOT/VesselVerse-Dataset/datasets/D-$DATASET_NAME"
-database_ID='1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi'
-user_upload_ID='1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi'
+database_ID='1zSQNcbr8gkF7yoKSGZB9NnE6CrYcAERg'
+user_upload_ID='1zSQNcbr8gkF7yoKSGZB9NnE6CrYcAERg'
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Dataset Storage Mapping (Testing Phase - same ID for all datasets)
@@ -39,7 +39,8 @@ user_upload_ID='1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi'
 # Note: Folder IDs are not sensitive without credentials (protected by .gitignore)
 
 # Testing ID (temporary - used for all datasets during development)
-TESTING_ID='1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi'
+TESTING_ID='1zSQNcbr8gkF7yoKSGZB9NnE6CrYcAERg'
+#'1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi'
 
 # IXI Dataset
 IXI_STORAGE_ID="$TESTING_ID"
