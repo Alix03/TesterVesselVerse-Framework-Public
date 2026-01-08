@@ -73,3 +73,4 @@ VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/*
 !VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/*/
 VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/*/**
 !VesselVerse-Framework/VESSELVERSE_DATA_IXI/data/**/.gitkeep
+.backup_git_datasets/

@@ -26,9 +26,9 @@ case "$(uname -s)" in
 esac
 
 # Credential paths (relative to REPO_ROOT for portability)
-owner_auth_path="$REPO_ROOT/credentials/vesselverse25-141593c63cd7.json"
+owner_auth_path="/Users/aliceboccadifuoco/Desktop/VesselVerse/credentials/vesselverse25-9f62c69233a4.json"
 user_auth_path="$REPO_ROOT/credentials/vesselverse25-141593c63cd7.json"
-DATASET_NAME='IXI'
+DATASET_NAME='Prova'
 DATASET_PATH="$REPO_ROOT/VesselVerse-Dataset/datasets/D-$DATASET_NAME"
 database_ID='1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi'
 user_upload_ID='1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi'

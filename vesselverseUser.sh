@@ -13,16 +13,17 @@ NC='\033[0m' # No Color
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATASET_GIT_ROOT="$REPO_ROOT/VesselVerse-Dataset"
+VENV_ROOT="$DATASET_GIT_ROOT"
 
 # Create and activate venv if not exists
-if [ ! -d "$REPO_ROOT/.venv" ]; then
-    echo -e "${YELLOW}Creating virtual environment...${NC}"
-    python3 -m venv "$REPO_ROOT/.venv"
+if [ ! -d "$VENV_ROOT/.venv" ]; then
+    echo -e "${YELLOW}Creating virtual environment in VesselVerse-Dataset...${NC}"
+    python3 -m venv "$VENV_ROOT/.venv"
 fi
 
 # Activate venv
-if [ -f "$REPO_ROOT/.venv/bin/activate" ]; then
-    source "$REPO_ROOT/.venv/bin/activate" 2>/dev/null || true
+if [ -f "$VENV_ROOT/.venv/bin/activate" ]; then
+    source "$VENV_ROOT/.venv/bin/activate" 2>/dev/null || true
 else
     echo -e "${RED}❌ Error: Failed to create virtual environment${NC}"
     exit 1
