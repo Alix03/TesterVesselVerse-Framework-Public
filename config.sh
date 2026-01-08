@@ -28,7 +28,7 @@ esac
 # Credential paths (relative to REPO_ROOT for portability)
 owner_auth_path="/Users/aliceboccadifuoco/Desktop/VesselVerse/credentials/vesselverse25-141593c63cd7.json"
 user_auth_path="/Users/aliceboccadifuoco/Desktop/VesselVerse/credentials/vesselverse25-141593c63cd7.json"
-DATASET_NAME='Prova2'
+DATASET_NAME='Prova'
 DATASET_PATH="$REPO_ROOT/VesselVerse-Dataset/datasets/D-$DATASET_NAME"
 database_ID='1zSQNcbr8gkF7yoKSGZB9NnE6CrYcAERg'
 user_upload_ID='1zSQNcbr8gkF7yoKSGZB9NnE6CrYcAERg'

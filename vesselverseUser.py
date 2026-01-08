@@ -89,26 +89,24 @@ def check_prerequisites() -> bool:
     print(f"{Colors.GREEN}✅ All prerequisites met{Colors.NC}\n")
     return True
 
-def configure_credentials() -> bool:
+def configure_credentials() -> Tuple[bool, VesselVerseConfig]:
     """Configure user credentials"""
     print(f"{Colors.YELLOW}[2/6] Configuring user credentials...{Colors.NC}")
     
-    config_path = REPO_ROOT / 'config.sh'
-    if not config_path.exists():
-        print(f"{Colors.RED}❌ Error: config.sh not found{Colors.NC}")
-        return False
+    # Load config
+    config = VesselVerseConfig()
     
     # Find credential files
-    creds_dir = REPO_ROOT / 'credentials'
+    creds_dir = config.CREDENTIALS_DIR
     if not creds_dir.exists():
         print(f"{Colors.RED}❌ Error: credentials directory not found{Colors.NC}")
-        return False
+        return False, None
     
     cred_files = list(creds_dir.glob('*.json'))
     if not cred_files:
         print(f"{Colors.RED}❌ Error: No credential files found in credentials/{Colors.NC}")
         print("Please contact dataset maintainers to obtain credentials")
-        return False
+        return False, None
     
     print("Available credential files:")
     for i, cred_file in enumerate(cred_files):
@@ -121,62 +119,27 @@ def configure_credentials() -> bool:
         choice = int(choice_str)
         if choice < 0 or choice >= len(cred_files):
             print(f"{Colors.RED}❌ Invalid selection{Colors.NC}")
-            return False
+            return False, None
     except ValueError:
         print(f"{Colors.RED}❌ Invalid input{Colors.NC}")
-        return False
+        return False, None
     
     selected_cred = cred_files[choice]
     print(f"{Colors.GREEN}✅ Using credentials: {selected_cred.name}{Colors.NC}\n")
     
-    # Update config.sh
-    try:
-        with open(config_path, 'r') as f:
-            config_content = f.read()
-        
-        # Replace user_auth_path
-        import re
-        config_content = re.sub(
-            r'user_auth_path="[^"]*"',
-            f'user_auth_path="{selected_cred.absolute()}"',
-            config_content
-        )
-        
-        with open(config_path, 'w') as f:
-            f.write(config_content)
-        
-        print(f"{Colors.GREEN}✅ config.sh updated{Colors.NC}\n")
-        return True
-    except Exception as e:
-        print(f"{Colors.RED}❌ Error updating config.sh: {e}{Colors.NC}")
-        return False
+    # Update config with selected credentials
+    config.user_auth_path = selected_cred
+    
+    return True, config
 
-def configure_dvc_remotes() -> bool:
+def configure_dvc_remotes(config: VesselVerseConfig) -> bool:
     """Configure DVC remotes for user"""
     print(f"{Colors.YELLOW}[3/6] Configuring DVC remotes...{Colors.NC}")
     
-    # Load config.sh
-    config_path = REPO_ROOT / 'config.sh'
-    try:
-        config_vars = {}
-        with open(config_path, 'r') as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith(('database_ID=', 'user_upload_ID=', 'user_auth_path=')):
-                    key, value = line.split('=', 1)
-                    config_vars[key] = value.strip('"\'')
-        
-        database_id = config_vars.get('database_ID')
-        user_upload_id = config_vars.get('user_upload_ID')
-        user_auth_path = config_vars.get('user_auth_path')
-        
-        if not all([database_id, user_upload_id, user_auth_path]):
-            print(f"{Colors.RED}❌ Error: Missing configuration variables{Colors.NC}")
-            return False
-        
-    except Exception as e:
-        print(f"{Colors.RED}❌ Error reading config.sh: {e}{Colors.NC}")
-        return False
+    # Get configuration from VesselVerseConfig
+    database_id = config.database_ID
+    user_upload_id = config.user_upload_ID
+    user_auth_path = str(config.user_auth_path)
     
     # Remove existing remotes if they exist
     run_command(['dvc', 'remote', 'remove', 'storage'], cwd=REPO_ROOT)
@@ -235,10 +198,11 @@ def user_initial_setup():
     if not check_prerequisites():
         return
     
-    if not configure_credentials():
+    success, config = configure_credentials()
+    if not success:
         return
     
-    if not configure_dvc_remotes():
+    if not configure_dvc_remotes(config):
         return
     
     # Verify setup

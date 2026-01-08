@@ -6,6 +6,7 @@ import subprocess
 import json
 from pathlib import Path
 from typing import List, Tuple, Optional
+from config import VesselVerseConfig
 
 # ANSI Color codes
 class Colors:
@@ -99,57 +100,7 @@ def check_prerequisites() -> bool:
     return True
 
 
-def load_config() -> dict:
-    """Load configuration from config.sh"""
-    config_file = REPO_ROOT / 'config.sh'
-    
-    if not config_file.exists():
-        print(f"{Colors.RED}❌ Error: config.sh not found{Colors.NC}")
-        return {}
-    
-    # Parse config.sh
-    config = {}
-    try:
-        with open(config_file, 'r') as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith('#'):
-                    continue
-                if '=' in line:
-                    key, value = line.split('=', 1)
-                    value = value.strip().strip("'\"")
-                    config[key.strip()] = value
-    except Exception as e:
-        print(f"{Colors.RED}❌ Error reading config.sh: {e}{Colors.NC}")
-        return {}
-    
-    return config
-
-
-def update_config(key: str, value: str):
-    """Update a value in config.sh"""
-    config_file = REPO_ROOT / 'config.sh'
-    
-    try:
-        with open(config_file, 'r') as f:
-            lines = f.readlines()
-        
-        # Find and replace the line
-        updated = False
-        for i, line in enumerate(lines):
-            if line.strip().startswith(f'{key}='):
-                lines[i] = f'{key}="{value}"\n'
-                updated = True
-                break
-        
-        # If not found, append
-        if not updated:
-            lines.append(f'\n{key}="{value}"\n')
-        
-        with open(config_file, 'w') as f:
-            f.writelines(lines)
-    except Exception as e:
-        print(f"{Colors.RED}❌ Error updating config.sh: {e}{Colors.NC}")
+# Configuration is now loaded from config.py using VesselVerseConfig class
 
 
 def display_header():
@@ -190,7 +141,10 @@ def initial_owner_setup():
     # Step 2: Configure credentials
     print(f"{Colors.YELLOW}[2/4] Configuring owner credentials...{Colors.NC}")
     
-    cred_dir = REPO_ROOT / 'credentials'
+    # Load config
+    config = VesselVerseConfig()
+    
+    cred_dir = config.CREDENTIALS_DIR
     if not cred_dir.exists():
         print(f"{Colors.RED}❌ Error: credentials directory not found{Colors.NC}")
         return False
@@ -220,27 +174,15 @@ def initial_owner_setup():
     
     print(f"{Colors.GREEN}✅ Using credentials: {selected_cred.name}{Colors.NC}")
     
-    # Update config.sh
-    update_config('owner_auth_path', str(selected_cred))
+    # Update config with selected credentials
+    config.owner_auth_path = selected_cred
     print()
 
     # Step 3: Configure DVC remotes
     print(f"{Colors.YELLOW}[3/4] Configuring DVC remotes...{Colors.NC}")
     
-    config = load_config()
-    if not config:
-        return False
-    
-    database_id = config.get('database_ID', '').strip()
-    user_upload_id = config.get('user_upload_ID', '').strip()
-    
-    if not database_id:
-        print(f"{Colors.RED}❌ Error: database_ID is empty in config.sh{Colors.NC}")
-        return False
-    
-    if not user_upload_id:
-        print(f"{Colors.RED}❌ Error: user_upload_ID is empty in config.sh{Colors.NC}")
-        return False
+    database_id = config.database_ID
+    user_upload_id = config.user_upload_ID
     
     # Remove existing remotes
     run_command('dvc remote remove storage', cwd=REPO_ROOT)
@@ -300,11 +242,8 @@ def owner_update_dataset():
     print(f"{Colors.BLUE}═══════════════════════════════════════════════════{Colors.NC}")
     print()
 
-    # Check config
-    config = load_config()
-    if not config:
-        print("Run option [1] Initial Setup first")
-        return False
+    # Load config
+    config = VesselVerseConfig()
     
     # Check DVC config
     code, output = run_command('dvc remote list', cwd=REPO_ROOT, capture_output=True)
@@ -399,11 +338,8 @@ def owner_upload_dataset():
     print(f"{Colors.BLUE}═══════════════════════════════════════════════════{Colors.NC}")
     print()
 
-    # Check config
-    config = load_config()
-    if not config:
-        print("Run option [1] Initial Setup first")
-        return False
+    # Load config
+    config = VesselVerseConfig()
     
     # Check DVC config
     code, output = run_command('dvc remote list', cwd=REPO_ROOT, capture_output=True)
@@ -672,11 +608,8 @@ def owner_review_user_uploads():
     print(f"{Colors.BLUE}═══════════════════════════════════════════════════{Colors.NC}")
     print()
 
-    # Check config
-    config = load_config()
-    if not config:
-        print("Run option [1] Initial Setup first")
-        return False
+    # Load config
+    config = VesselVerseConfig()
     
     # Check DVC config
     code, output = run_command('dvc remote list', cwd=REPO_ROOT, capture_output=True)
