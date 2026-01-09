@@ -1,0 +1,192 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "VesselVerse Visualization Parameters",
+  "description": "Lightweight JSON format for 3D Slicer visualization settings",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["volume", "timestamp", "slicer_version"],
+  "properties": {
+    "volume": {
+      "type": "string",
+      "description": "Original volume filename (e.g., IXI001_MRA.nii.gz)",
+      "example": "IXI001_MRA.nii.gz"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when parameters were saved",
+      "example": "2026-01-09T10:30:00Z"
+    },
+    "slicer_version": {
+      "type": "string",
+      "description": "3D Slicer version used to save parameters",
+      "example": "5.6.2"
+    },
+    "window_level": {
+      "type": "object",
+      "description": "Window/Level settings for grayscale display",
+      "properties": {
+        "window": {
+          "type": "number",
+          "description": "Window width (contrast range)",
+          "example": 500
+        },
+        "level": {
+          "type": "number",
+          "description": "Window center (brightness)",
+          "example": 250
+        }
+      }
+    },
+    "color_map": {
+      "type": "string",
+      "description": "Color lookup table name",
+      "enum": ["Grey", "Red", "Green", "Blue", "Yellow", "Cyan", "Magenta", "Viridis", "Plasma"],
+      "default": "Grey",
+      "example": "Grey"
+    },
+    "opacity_transfer": {
+      "type": "array",
+      "description": "Opacity transfer function as [intensity, opacity] pairs",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      },
+      "example": [[0, 0.0], [64, 0.1], [128, 0.5], [192, 0.8], [255, 1.0]]
+    },
+    "gradient_opacity": {
+      "type": "array",
+      "description": "Gradient opacity for edge enhancement",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      },
+      "example": [[0, 0.0], [90, 0.5], [180, 1.0]]
+    },
+    "rendering_mode": {
+      "type": "string",
+      "description": "Volume rendering technique",
+      "enum": ["VR_GPU_Ray_Casting", "VR_CPU_Ray_Casting", "Maximum_Intensity_Projection", "Minimum_Intensity_Projection"],
+      "default": "VR_GPU_Ray_Casting",
+      "example": "VR_GPU_Ray_Casting"
+    },
+    "camera": {
+      "type": "object",
+      "description": "3D camera position and orientation",
+      "properties": {
+        "position": {
+          "type": "array",
+          "description": "Camera position [x, y, z]",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {"type": "number"},
+          "example": [100.0, 200.0, 300.0]
+        },
+        "focal_point": {
+          "type": "array",
+          "description": "Camera focal point [x, y, z]",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {"type": "number"},
+          "example": [0.0, 0.0, 0.0]
+        },
+        "view_up": {
+          "type": "array",
+          "description": "Camera view up vector [x, y, z]",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {"type": "number"},
+          "example": [0.0, 1.0, 0.0]
+        },
+        "view_angle": {
+          "type": "number",
+          "description": "Camera field of view in degrees",
+          "minimum": 1,
+          "maximum": 179,
+          "default": 30,
+          "example": 30.0
+        }
+      }
+    },
+    "slice_views": {
+      "type": "object",
+      "description": "2D slice view positions (mm coordinates)",
+      "properties": {
+        "red": {
+          "type": "number",
+          "description": "Axial slice position",
+          "example": 0.0
+        },
+        "yellow": {
+          "type": "number",
+          "description": "Sagittal slice position",
+          "example": 0.0
+        },
+        "green": {
+          "type": "number",
+          "description": "Coronal slice position",
+          "example": 0.0
+        }
+      }
+    },
+    "segmentation_visibility": {
+      "type": "object",
+      "description": "Visibility state for each segmentation",
+      "additionalProperties": {
+        "type": "boolean"
+      },
+      "example": {
+        "vessels": true,
+        "background": false,
+        "arteries": true,
+        "veins": true
+      }
+    },
+    "segmentation_opacity": {
+      "type": "object",
+      "description": "Opacity for each segmentation (0.0 to 1.0)",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "example": {
+        "vessels": 0.8,
+        "arteries": 1.0,
+        "veins": 0.6
+      }
+    },
+    "roi": {
+      "type": "object",
+      "description": "Region of Interest (cropping box)",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether ROI cropping is active",
+          "default": false
+        },
+        "bounds": {
+          "type": "array",
+          "description": "ROI bounds [xMin, xMax, yMin, yMax, zMin, zMax]",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {"type": "number"},
+          "example": [-50, 50, -50, 50, -50, 50]
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional notes about visualization settings",
+      "example": "Optimized for vessel visualization in MRA sequences"
+    }
+  }
+}
