@@ -49,11 +49,11 @@ class VesselVerseConfig:
         self.VENV_PATH = self.VENV_ROOT / ".venv"
         
         # Google Drive folder IDs
-        self.database_ID = '1zSQNcbr8gkF7yoKSGZB9NnE6CrYcAERg'
-        self.user_upload_ID = '1zSQNcbr8gkF7yoKSGZB9NnE6CrYcAERg'
+        self.database_ID = '1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi'
+        self.user_upload_ID = '1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi'
         
         # Testing ID (temporary - used for all datasets during development)
-        self.TESTING_ID = '1zSQNcbr8gkF7yoKSGZB9NnE6CrYcAERg'
+        self.TESTING_ID = '1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi'
         
         # Dataset storage mapping
         self._setup_dataset_storage()

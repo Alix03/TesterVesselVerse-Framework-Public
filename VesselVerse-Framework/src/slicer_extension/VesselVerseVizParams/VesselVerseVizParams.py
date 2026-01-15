@@ -88,6 +88,15 @@ class VesselVerseVizParamsWidget(ScriptedLoadableModuleWidget):
         self.datasetPathEdit.filters = ctk.ctkPathLineEdit.Dirs
         self.datasetPathEdit.setToolTip("Path to dataset directory (e.g., /path/to/D-IXI)")
         volumeLayout.addRow("Dataset Path: ", self.datasetPathEdit)
+
+        # User info fields
+        self.userNameEdit = qt.QLineEdit()
+        self.userNameEdit.setPlaceholderText("Your name or initials")
+        volumeLayout.addRow("User Name: ", self.userNameEdit)
+
+        self.expertiseCombo = qt.QComboBox()
+        self.expertiseCombo.addItems(["basic", "intermediate", "advanced"])
+        volumeLayout.addRow("Expertise Level: ", self.expertiseCombo)
         
         # Auto-detect button
         self.autoDetectButton = qt.QPushButton("Auto-Detect Dataset")
@@ -267,6 +276,9 @@ class VesselVerseVizParamsWidget(ScriptedLoadableModuleWidget):
         segmentation_node = self.segmentationSelector.currentNode()
         dataset_path = self.datasetPathEdit.currentPath
         notes = self.notesEdit.text
+
+        user_name = self.userNameEdit.text.strip()
+        expertise = self.expertiseCombo.currentText.strip()
         
         if not volume_node:
             self.saveStatusLabel.text = "❌ No volume selected"
@@ -291,7 +303,9 @@ class VesselVerseVizParamsWidget(ScriptedLoadableModuleWidget):
             volume_node,
             str(output_path),
             segmentation_node,
-            notes
+            notes,
+            user_name,
+            expertise
         )
         
         if success:

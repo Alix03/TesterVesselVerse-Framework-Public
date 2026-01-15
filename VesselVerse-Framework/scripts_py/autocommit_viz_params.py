@@ -22,14 +22,27 @@ def git_add_viz_params(dataset_path: Path) -> Tuple[bool, str]:
         (success, message)
     """
     try:
-        result = subprocess.run(
-            ["git", "add", "viz_params/*.json"],
-            cwd=dataset_path,
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        return True, "✅ Files added to Git"
+        # Use pathlib to find all JSON files in viz_params
+        viz_params_dir = dataset_path / "viz_params"
+        if not viz_params_dir.exists():
+            return False, f"❌ Directory not found: {viz_params_dir}"
+        
+        json_files = list(viz_params_dir.glob("*.json"))
+        if not json_files:
+            return False, "❌ No JSON files found in viz_params/"
+        
+        # Add files one by one (relative to dataset_path)
+        for json_file in json_files:
+            relative_path = json_file.relative_to(dataset_path)
+            subprocess.run(
+                ["git", "add", str(relative_path)],
+                cwd=dataset_path,
+                capture_output=True,
+                text=True,
+                check=True
+            )
+        
+        return True, f"✅ {len(json_files)} file(s) added to Git"
     except subprocess.CalledProcessError as e:
         return False, f"❌ Git add failed: {e.stderr}"
 

@@ -6,6 +6,7 @@ import subprocess
 import json
 from pathlib import Path
 from typing import List, Tuple
+from config import VesselVerseConfig
 
 # Colors for output (works on all platforms)
 class Colors:
@@ -18,6 +19,49 @@ class Colors:
 
 # Get repo root
 REPO_ROOT = Path(__file__).parent.absolute()
+DATASET_GIT_ROOT = REPO_ROOT / "VesselVerse-Dataset"
+VENV_ROOT = DATASET_GIT_ROOT
+VENV_PATH = VENV_ROOT / ".venv"
+
+
+def setup_virtual_environment() -> bool:
+    """
+    Create and setup virtual environment if not exists
+    Returns True if venv is ready, False otherwise
+    """
+    if not VENV_PATH.exists():
+        print(f"{Colors.YELLOW}Creating virtual environment in VesselVerse-Dataset...{Colors.NC}")
+        try:
+            subprocess.run(
+                [sys.executable, '-m', 'venv', str(VENV_PATH)],
+                check=True,
+                cwd=REPO_ROOT
+            )
+            print(f"{Colors.GREEN}✅ Virtual environment created{Colors.NC}")
+        except subprocess.CalledProcessError as e:
+            print(f"{Colors.RED}❌ Error: Failed to create virtual environment{Colors.NC}")
+            return False
+    
+    # Get the python executable from venv
+    if sys.platform == 'win32':
+        venv_python = VENV_PATH / 'Scripts' / 'python.exe'
+    else:
+        venv_python = VENV_PATH / 'bin' / 'python'
+    
+    if not venv_python.exists():
+        print(f"{Colors.RED}❌ Error: Virtual environment is corrupted{Colors.NC}")
+        return False
+    
+    return True
+
+
+def get_venv_python() -> Path:
+    """Get the Python executable from the virtual environment"""
+    if sys.platform == 'win32':
+        return VENV_PATH / 'Scripts' / 'python.exe'
+    else:
+        return VENV_PATH / 'bin' / 'python'
+
 
 def print_header():
     """Display script header"""
@@ -77,13 +121,25 @@ def check_prerequisites() -> bool:
         print(f"{Colors.RED}❌ Error: Git is not installed{Colors.NC}")
         return False
     
-    # Check DVC
-    success, _ = run_command(['dvc', '--version'])
+    # Get venv python
+    venv_python = get_venv_python()
+    
+    # Check DVC in venv
+    success, _ = run_command([str(venv_python), '-c', 'import dvc.cli'])
     if not success:
-        print(f"{Colors.YELLOW}⚠️  DVC is not installed. Installing now...{Colors.NC}")
-        success, _ = run_command([sys.executable, '-m', 'pip', 'install', 'dvc[gdrive]'])
+        print(f"{Colors.YELLOW}⚠️  DVC is not installed in venv. Installing now...{Colors.NC}")
+        success, _ = run_command([str(venv_python), '-m', 'pip', 'install', 'dvc[gdrive]'])
         if not success:
             print(f"{Colors.RED}❌ Failed to install DVC{Colors.NC}")
+            return False
+    
+    # Check DVC gdrive support
+    success, _ = run_command([str(venv_python), '-c', 'import dvc_gdrive'])
+    if not success:
+        print(f"{Colors.YELLOW}⚠️  DVC gdrive support not found. Installing...{Colors.NC}")
+        success, _ = run_command([str(venv_python), '-m', 'pip', 'install', 'dvc[gdrive]'])
+        if not success:
+            print(f"{Colors.RED}❌ Failed to install DVC gdrive support{Colors.NC}")
             return False
     
     print(f"{Colors.GREEN}✅ All prerequisites met{Colors.NC}\n")
@@ -414,6 +470,11 @@ def user_switch_dataset():
 
 def main():
     """Main execution loop"""
+    # Setup virtual environment first
+    if not setup_virtual_environment():
+        print(f"{Colors.RED}Failed to setup virtual environment. Exiting...{Colors.NC}")
+        sys.exit(1)
+    
     print_header()
     
     while True:

@@ -66,6 +66,7 @@ python3 autocommit_viz_params.py /path/to/D-IXI --push
 ### Auto-Load Automatico (Consigliato)
 
 1. **Installa Auto-Load Hook** (una sola volta):
+
    ```bash
    # Copia lo script nella directory di avvio di Slicer
    mkdir -p ~/.config/NA-MIC/Extensions-*/SlicerStartup/
@@ -101,6 +102,7 @@ manager.load_params(
 ```
 
 O usa il modulo UI:
+
 - Moduli → VesselVerse → VesselVerse Viz Params
 - Click "🔄 Auto-Load Settings"
 
@@ -150,6 +152,7 @@ Il file JSON include:
 ## 🔧 Installazione Slicer Module
 
 ### Metodo 1: Extension Manager (Futuro)
+
 ```
 Edit → Application Settings → Modules → Additional module paths
 Aggiungi: /path/to/VesselVerse-Framework/src/slicer_extension
@@ -157,6 +160,7 @@ Restart Slicer
 ```
 
 ### Metodo 2: Developer Mode (Ora)
+
 ```python
 # In Slicer Python Console:
 import sys
@@ -169,20 +173,22 @@ slicer.util.selectModule('VesselVerseVizParams')
 
 ## 📦 File Sizes Comparison
 
-| Formato | Dimensione | Git Friendly | DVC Required |
-|---------|------------|--------------|--------------|
-| **.mrml** | 100-500 KB | ❌ No | ✅ Sì |
-| **.json** | 2-5 KB | ✅ Sì | ❌ No |
+| Formato   | Dimensione | Git Friendly | DVC Required |
+| --------- | ---------- | ------------ | ------------ |
+| **.mrml** | 100-500 KB | ❌ No        | ✅ Sì        |
+| **.json** | 2-5 KB     | ✅ Sì        | ❌ No        |
 
 ## 🚀 Quick Start
 
 1. **Setup** (Owner):
+
    ```bash
    cd /path/to/dataset
    mkdir -p viz_params
    ```
 
 2. **Save** (Owner in Slicer):
+
    - Carica modulo VesselVerse Viz Params
    - Regola visualizzazione
    - Click "Save Visualization Settings"
@@ -197,16 +203,19 @@ slicer.util.selectModule('VesselVerseVizParams')
 ## 🐛 Troubleshooting
 
 **Problema**: "No saved parameters found"
+
 - Verifica che il file JSON esista in `viz_params/`
 - Naming convention: `{volume_name}_viz.json`
 - Rimuovi estensioni: `IXI001_MRA.nii.gz` → `IXI001_MRA_viz.json`
 
 **Problema**: "Auto-load non funziona"
+
 - Verifica che `autoload_viz_params.py` sia in `SlicerStartup/`
 - Controlla console Slicer per errori
 - Path framework: `~/Desktop/VesselVerse/VesselVerse-Framework`
 
 **Problema**: "Git commit failed"
+
 - Verifica di essere nella directory del dataset
 - Controlla che `viz_params/` esista
 - Verifica permessi Git
@@ -277,6 +286,7 @@ json_path = viz_params_dir / f"{base_name}_settings.json"
 ## 🤝 Contributing
 
 Per aggiungere nuovi parametri:
+
 1. Aggiorna `schema.json`
 2. Implementa `extract_*()` e `apply_*()` in `viz_params_manager.py`
 3. Testa con dataset reale

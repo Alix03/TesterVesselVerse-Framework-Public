@@ -118,7 +118,12 @@ class VizParamsManager:
         layout_manager = slicer.app.layoutManager()
         threeDWidget = layout_manager.threeDWidget(0)
         threeDView = threeDWidget.threeDView()
-        camera = threeDView.camera()
+        
+        # Get camera from renderer
+        renderWindow = threeDView.renderWindow()
+        renderers = renderWindow.GetRenderers()
+        renderer = renderers.GetFirstRenderer()
+        camera = renderer.GetActiveCamera()
         
         position = camera.GetPosition()
         focal_point = camera.GetFocalPoint()
@@ -186,7 +191,7 @@ class VizParamsManager:
         
         return opacity
     
-    def save_params(self, volume_node, output_path: str, segmentation_node=None, notes: str = "") -> bool:
+    def save_params(self, volume_node, output_path: str, segmentation_node=None, notes: str = "", user_name: str = "", expertise: str = "") -> bool:
         """
         Save visualization parameters to JSON file.
         
@@ -195,6 +200,8 @@ class VizParamsManager:
             output_path: Path to save JSON file
             segmentation_node: Optional segmentation node
             notes: Optional notes about settings
+            user_name: Name of the user saving the params
+            expertise: Level of expertise (basic/intermediate/advanced)
             
         Returns:
             True if successful, False otherwise
@@ -211,6 +218,13 @@ class VizParamsManager:
                 "slicer_version": slicer.app.applicationVersion,
                 "schema_version": self.SCHEMA_VERSION
             }
+
+            # User info
+            if user_name or expertise:
+                params["user"] = {
+                    "name": user_name,
+                    "expertise": expertise
+                }
             
             # Window/Level
             window_level = self.extract_window_level(display_node)
@@ -271,8 +285,11 @@ class VizParamsManager:
     def apply_window_level(self, display_node, window_level: Dict[str, float]):
         """Apply window/level settings"""
         if display_node and window_level:
+            # Disable Auto Window/Level so manual values are used
+            display_node.SetAutoWindowLevel(0)
             display_node.SetWindow(window_level["window"])
             display_node.SetLevel(window_level["level"])
+            display_node.Modified()
     
     def apply_color_map(self, display_node, color_map_name: str):
         """Apply color lookup table"""
@@ -280,6 +297,7 @@ class VizParamsManager:
             color_node = slicer.util.getNode(f"*{color_map_name}*")
             if color_node:
                 display_node.SetAndObserveColorNodeID(color_node.GetID())
+                display_node.Modified()
     
     def apply_opacity_transfer(self, vol_render_node, opacity_points: List[Tuple[float, float]]):
         """Apply opacity transfer function"""
@@ -299,6 +317,10 @@ class VizParamsManager:
         # Add new points
         for intensity, opacity in opacity_points:
             opacity_func.AddPoint(intensity, opacity)
+        
+        # Notify changes
+        prop.Modified()
+        vol_render_node.Modified()
     
     def apply_gradient_opacity(self, vol_render_node, gradient_points: List[Tuple[float, float]]):
         """Apply gradient opacity function"""
@@ -315,13 +337,22 @@ class VizParamsManager:
         gradient_func.RemoveAllPoints()
         for gradient, opacity in gradient_points:
             gradient_func.AddPoint(gradient, opacity)
+        
+        # Notify changes
+        prop.Modified()
+        vol_render_node.Modified()
     
     def apply_camera(self, camera_params: Dict[str, Any]):
         """Apply camera parameters"""
         layout_manager = slicer.app.layoutManager()
         threeDWidget = layout_manager.threeDWidget(0)
         threeDView = threeDWidget.threeDView()
-        camera = threeDView.camera()
+        
+        # Get camera from the renderer
+        renderWindow = threeDView.renderWindow()
+        renderers = renderWindow.GetRenderers()
+        renderer = renderers.GetFirstRenderer()
+        camera = renderer.GetActiveCamera()
         
         camera.SetPosition(camera_params["position"])
         camera.SetFocalPoint(camera_params["focal_point"])
@@ -433,6 +464,13 @@ class VizParamsManager:
                 
                 if "segmentation_opacity" in params:
                     self.apply_segmentation_opacity(segmentation_node, params["segmentation_opacity"])
+            
+            # Force refresh all views
+            slicer.app.layoutManager().threeDWidget(0).threeDView().forceRender()
+            for name in ['Red', 'Yellow', 'Green']:
+                slice_widget = slicer.app.layoutManager().sliceWidget(name)
+                if slice_widget:
+                    slice_widget.sliceView().forceRender()
             
             print("✅ Visualization parameters loaded successfully")
             return True

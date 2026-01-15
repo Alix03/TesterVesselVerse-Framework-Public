@@ -50,10 +50,86 @@ class DatasetRegistry:
                 return dataset
         return None
     
+    def _load_dataset_config_file(self, dataset_dir: Path) -> Optional[dict]:
+        """Load dataset configuration from dataset_config.json if exists"""
+        config_file = dataset_dir / "dataset_config.json"
+        if config_file.exists():
+            import json
+            try:
+                with open(config_file, 'r') as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f"Warning: Could not load {config_file}: {e}")
+        return None
+    
+    def _register_dataset_from_config(self, dataset_dir: Path, config_data: dict):
+        """Register dataset from configuration dictionary"""
+        dataset_config = DatasetConfig(
+            name=config_data.get("name", dataset_dir.name[2:]),
+            unique_name=config_data.get("unique_name", dataset_dir.name[2:]),
+            base_path=dataset_dir,
+            image_dir=config_data.get("image_dir", ""),
+            image_suffix=config_data.get("image_suffix", "nii.gz"),
+            modality=config_data.get("modality", "MR"),
+            year=config_data.get("year"),
+            supported_models=config_data.get("supported_models", []),
+            file_pattern=config_data.get("file_pattern", "*.nii.gz"),
+            base_model_name=config_data.get("base_model_name", "TOT")
+        )
+        self.register_dataset(dataset_config)
+        return True
+    
+    def _register_generic_dataset(self, dataset_dir: Path, dataset_name: str):
+        """Register a dataset with generic/default configuration"""
+        # Auto-detect possible models by looking for subdirectories
+        supported_models = []
+        
+        # Check for common model directories
+        for model_dir in dataset_dir.iterdir():
+            if model_dir.is_dir() and not model_dir.name.startswith('.'):
+                model_name = model_dir.name
+                # Skip certain directories
+                if model_name not in ['viz_params', '__pycache__', '.dvc', '.git']:
+                    supported_models.append(model_name)
+        
+        # If no models found, add generic defaults
+        if not supported_models:
+            supported_models = [
+                f"{dataset_name.upper()}_TOT",
+                "STAPLE",
+                "ExpertAnnotations"
+            ]
+        
+        generic_config = DatasetConfig(
+            name=dataset_name,
+            unique_name=dataset_name,
+            base_path=dataset_dir,
+            image_dir="",
+            image_suffix="nii.gz",
+            modality="MR",
+            supported_models=supported_models
+        )
+        self.register_dataset(generic_config)
+        print(f"✓ Auto-registered dataset '{dataset_name}' with models: {supported_models}")
+    
     def _register_default_datasets(self):
         """Register default supported datasets"""
-        ################################### ADD HERE THE DATASETS THAT YOU WANT TO SUPPORT ###################################################
-        ######################################################################################################################################
+        ################################### DYNAMIC DATASET DISCOVERY ###################################################
+        # This method now automatically discovers ALL datasets in VesselVerse-Dataset/datasets/D-*
+        # 
+        # Priority order:
+        # 1. If dataset has dataset_config.json → use that configuration
+        # 2. If dataset name matches legacy patterns (IXI, COW23MR, etc.) → use legacy config
+        # 3. Otherwise → auto-detect models from subdirectories (generic fallback)
+        #
+        # To customize a dataset, create dataset_config.json in the dataset directory:
+        # {
+        #   "name": "MyDataset",
+        #   "unique_name": "MyDataset",
+        #   "image_suffix": "nii.gz",
+        #   "modality": "MR",
+        #   "supported_models": ["MODEL1", "MODEL2", "STAPLE"]
+        # }
         ######################################################################################################################################
         
         # Calculate absolute path from this file's location
@@ -70,7 +146,14 @@ class DatasetRegistry:
                 if dataset_dir.is_dir():
                     dataset_name = dataset_dir.name[2:]  # Remove "D-" prefix
                     
-                    # Register based on dataset name pattern
+                    # Priority 1: Check for dataset_config.json
+                    config_data = self._load_dataset_config_file(dataset_dir)
+                    if config_data:
+                        self._register_dataset_from_config(dataset_dir, config_data)
+                        continue
+                    
+                    # Priority 2: Legacy hardcoded configurations (for backward compatibility)
+                    registered = False
                     if dataset_name == "IXI":
                         ixi_config = DatasetConfig(
                             name="IXI",
@@ -132,21 +215,9 @@ class DatasetRegistry:
                         )
                         self.register_dataset(itk_config)
                         
-                    elif dataset_name == "Prova":
-                        prova_config = DatasetConfig(
-                            name="Prova",
-                            unique_name="Prova",
-                            base_path=dataset_dir,
-                            image_dir="",
-                            image_suffix="nii.gz",
-                            modality="MR",
-                            supported_models=[
-                                "PROVA_TOT",
-                                "STAPLE",
-                                "ExpertAnnotations"
-                            ]
-                        )
-                        self.register_dataset(prova_config)
+                    # Priority 3: Generic fallback - auto-detect everything
+                    if not registered:
+                        self._register_generic_dataset(dataset_dir, dataset_name)
         else:
             # Fallback to old behavior for backward compatibility
             ixi_config = DatasetConfig(
