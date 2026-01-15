@@ -67,3 +67,4 @@ scripts/restart_repo.sh
 **/*.nii.gz
 
 /IXI_TOT
+/viz_params
