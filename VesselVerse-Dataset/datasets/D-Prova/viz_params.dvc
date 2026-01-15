@@ -1,0 +1,6 @@
+outs:
+- md5: ee6292b893b1716f7b3a7613a55211ca.dir
+  size: 1072
+  nfiles: 2
+  hash: md5
+  path: viz_params
