@@ -221,7 +221,7 @@ def initial_owner_setup():
 
     # Step 3: Initialize and configure DVC in each dataset
     print(f"{Colors.YELLOW}[3/6] Initializing all datasets...{Colors.NC}")
-    datasets_dir = REPO_ROOT / "VesselVerse-Dataset" / "datasets"
+    datasets_dir = DATASET_GIT_ROOT / "datasets"
     if not datasets_dir.exists():
         print(f"{Colors.RED}❌ Error: Datasets directory not found: {datasets_dir}{Colors.NC}")
         return False
@@ -321,7 +321,7 @@ def owner_update_dataset():
     config = VesselVerseConfig()
 
     # Step 1: Select target dataset (like upload)
-    dataset_base = REPO_ROOT / 'VesselVerse-Dataset' / 'datasets'
+    dataset_base = DATASET_GIT_ROOT / 'datasets'
     print(f"{Colors.YELLOW}[1/5] Select target dataset...{Colors.NC}")
     available_datasets = sorted([
         d.name for d in dataset_base.glob('D-*') 
@@ -370,8 +370,7 @@ def owner_update_dataset():
 
     # Step 2: Update Git
     print(f"{Colors.YELLOW}[2/5] Updating Git repository...{Colors.NC}")
-    #### DATASET GIT ROOT invece di REPO_ROOT
-    code, _ = run_command('git pull', cwd=REPO_ROOT)
+    code, _ = run_command('git pull', cwd=DATASET_GIT_ROOT)
     if code == 0:
         print(f"{Colors.GREEN}✅ Git repository updated{Colors.NC}")
     else:
@@ -392,7 +391,7 @@ def owner_update_dataset():
 
     # Step 4: Scan for .dvc files
     print(f"{Colors.YELLOW}[4/5] Scanning for .dvc files...{Colors.NC}")
-    dvc_files = sorted(data_dir.glob('*.dvc'))
+    dvc_files = sorted(f for f in data_dir.glob('*.dvc') if f.is_file())
     if not dvc_files:
         print(f"{Colors.YELLOW}⚠️  No .dvc files found in {data_dir}{Colors.NC}")
         return True
@@ -445,7 +444,7 @@ def owner_upload_dataset():
     config = VesselVerseConfig()
     
     # Step 1: Select target dataset
-    dataset_base = REPO_ROOT / 'VesselVerse-Dataset' / 'datasets'
+    dataset_base = DATASET_GIT_ROOT / 'datasets'
     print(f"{Colors.YELLOW}[1/5] Select target dataset...{Colors.NC}")
     available_datasets = sorted([
         d.name for d in dataset_base.glob('D-*') 
@@ -654,21 +653,21 @@ def owner_upload_dataset():
         if dvc_file.exists():
             rel_path = dvc_file.relative_to(REPO_ROOT)
             print(f"  Running: git add {rel_path}")
-            run_command(f'git add "{rel_path}"', cwd=REPO_ROOT)
+            run_command(f'git add "{rel_path}"', cwd=DATASET_GIT_ROOT)
     
     # Commit if there are changes
-    code, _ = run_command('git diff --cached --quiet', cwd=REPO_ROOT)
+    code, _ = run_command('git diff --cached --quiet', cwd=DATASET_GIT_ROOT)
     if code == 0:
         print(f"{Colors.YELLOW}⚠️  No new .dvc files to commit in dataset directory{Colors.NC}")
     else:
         print(f"  Running: git commit -m \"Add .dvc files to {selected_dataset}\"")
-        code, _ = run_command(f'git commit -m "Add .dvc files to {selected_dataset}"', cwd=REPO_ROOT)
+        code, _ = run_command(f'git commit -m "Add .dvc files to {selected_dataset}"', cwd=VesselVerse-Dataset)
         if code == 0:
             print(f"{Colors.GREEN}✅ .dvc files committed{Colors.NC}")
     
     # Push to Git
     print("  Running: git push")
-    code, _ = run_command('git push', cwd=REPO_ROOT)
+    code, _ = run_command('git push', cwd=DATASET_GIT_ROOT)
     if code == 0:
         print(f"{Colors.GREEN}✅ Pushed to Git remote{Colors.NC}")
     else:
