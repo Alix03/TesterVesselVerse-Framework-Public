@@ -191,7 +191,7 @@ class VizParamsManager:
         
         return opacity
     
-    def save_params(self, volume_node, output_path: str, segmentation_node=None, notes: str = "", user_name: str = "", expertise: str = "") -> bool:
+    def save_params(self, volume_node, output_path: str, segmentation_node=None, notes: str = "", user_name: str = "", expertise: str = "", framework_specific: dict = None, itk_snap_params: dict = None) -> bool:
         """
         Save visualization parameters to JSON file.
         
@@ -202,7 +202,6 @@ class VizParamsManager:
             notes: Optional notes about settings
             user_name: Name of the user saving the params
             expertise: Level of expertise (basic/intermediate/advanced)
-            
         Returns:
             True if successful, False otherwise
         """
@@ -250,6 +249,19 @@ class VizParamsManager:
                 if vol_render_node.GetVolumePropertyNode():
                     vol_prop = vol_render_node.GetVolumePropertyNode().GetVolumeProperty()
                     params["rendering_mode"] = "VR_GPU_Ray_Casting"  # Default
+
+            # Framework specific section
+            framework_info = {}
+            # Slicer specific
+            framework_info["slicer"] = {"slicer_version": slicer.app.applicationVersion}
+            # Custom user-provided
+            if framework_specific:
+                framework_info.update(framework_specific)
+            # ITK-SNAP specific
+            if itk_snap_params:
+                framework_info["itk_snap"] = itk_snap_params
+            if framework_info:
+                params["framework_specific"] = framework_info
             
             # Camera
             params["camera"] = self.extract_camera()
@@ -403,7 +415,7 @@ class VizParamsManager:
             if segment_id:
                 display_node.SetSegmentOpacity3D(segment_id, segment_opacity)
     
-    def load_params(self, volume_node, input_path: str, segmentation_node=None) -> bool:
+    def load_params(self, volume_node, input_path: str, segmentation_node=None, framework_name: str = None) -> bool:
         """
         Load visualization parameters from JSON file.
         
@@ -480,6 +492,13 @@ class VizParamsManager:
             import traceback
             traceback.print_exc()
             return False
+
+                # Optionally handle framework_specific
+                if "framework_specific" in params:
+                    if framework_name and framework_name in params["framework_specific"]:
+                        print(f"ℹ️  Found specific parameters for framework: {framework_name}")
+                        # Qui puoi aggiungere logica per applicare parametri specifici
+                        # Esempio: params["framework_specific"][framework_name]
     
     def auto_detect_params_file(self, volume_node, dataset_path: str) -> Optional[str]:
         """

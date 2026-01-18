@@ -7,67 +7,22 @@ import json
 from pathlib import Path
 from typing import List, Tuple
 from config import VesselVerseConfig
+from vv_utils import Colors, get_repo_root, get_venv_path, get_venv_python, setup_virtual_environment, run_command, check_prerequisites, configure_credentials, configure_dvc_remotes
 
-# Colors for output (works on all platforms)
-class Colors:
-    RED = '\033[0;31m'
-    GREEN = '\033[0;32m'
-    YELLOW = '\033[1;33m'
-    BLUE = '\033[0;34m'
-    CYAN = '\033[0;36m'
-    NC = '\033[0m'  # No Color
 
 # Get repo root
-REPO_ROOT = Path(__file__).parent.absolute()
+REPO_ROOT = get_repo_root()
 DATASET_GIT_ROOT = REPO_ROOT / "VesselVerse-Dataset"
 VENV_ROOT = DATASET_GIT_ROOT
-VENV_PATH = VENV_ROOT / ".venv"
+VENV_PATH = get_venv_path(REPO_ROOT)
 
 
-def setup_virtual_environment() -> bool:
-    """
-    Create and setup virtual environment if not exists
-    Returns True if venv is ready, False otherwise
-    """
-    if not VENV_PATH.exists():
-        print(f"{Colors.YELLOW}Creating virtual environment in VesselVerse-Dataset...{Colors.NC}")
-        try:
-            subprocess.run(
-                [sys.executable, '-m', 'venv', str(VENV_PATH)],
-                check=True,
-                cwd=REPO_ROOT
-            )
-            print(f"{Colors.GREEN}✅ Virtual environment created{Colors.NC}")
-        except subprocess.CalledProcessError as e:
-            print(f"{Colors.RED}❌ Error: Failed to create virtual environment{Colors.NC}")
-            return False
-    
-    # Get the python executable from venv
-    if sys.platform == 'win32':
-        venv_python = VENV_PATH / 'Scripts' / 'python.exe'
-    else:
-        venv_python = VENV_PATH / 'bin' / 'python'
-    
-    if not venv_python.exists():
-        print(f"{Colors.RED}❌ Error: Virtual environment is corrupted{Colors.NC}")
-        return False
-    
-    return True
-
-
-def get_venv_python() -> Path:
-    """Get the Python executable from the virtual environment"""
-    if sys.platform == 'win32':
-        return VENV_PATH / 'Scripts' / 'python.exe'
-    else:
-        return VENV_PATH / 'bin' / 'python'
-
-
-def print_header():
+def display_header():
     """Display script header"""
     print(f"\n{Colors.BLUE}{'='*55}{Colors.NC}")
     print(f"{Colors.BLUE}         VesselVerse Dataset User Manager          {Colors.NC}")
     print(f"{Colors.BLUE}{'='*55}{Colors.NC}\n")
+
 
 def print_menu():
     """Display user menu"""
@@ -75,175 +30,8 @@ def print_menu():
     print("  [1] Initial Setup     - First time setup (configure credentials & download)")
     print("  [2] Update Dataset    - Sync latest changes from remote")
     print("  [3] Upload Data       - Upload your modifications to the shared folder")
-    print("  [4] Switch Dataset    - Change to a different dataset")
-    print("  [5] Exit\n")
+    print("  [4] Exit\n")
 
-def run_command(cmd: List[str], description: str = "", cwd: Path = None) -> Tuple[bool, str]:
-    """
-    Run a shell command and return success status
-    
-    Args:
-        cmd: Command as list (e.g., ['git', 'pull'])
-        description: Description for logging
-        cwd: Working directory
-        
-    Returns:
-        Tuple of (success: bool, output: str)
-    """
-    try:
-        if cwd is None:
-            cwd = REPO_ROOT
-        
-        result = subprocess.run(
-            cmd,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            check=False
-        )
-        
-        return result.returncode == 0, result.stdout + result.stderr
-    except Exception as e:
-        return False, str(e)
-
-def check_prerequisites() -> bool:
-    """Check if all prerequisites are installed"""
-    print(f"{Colors.YELLOW}[1/6] Checking prerequisites...{Colors.NC}")
-    
-    # Check Python
-    if sys.version_info < (3, 8):
-        print(f"{Colors.RED}❌ Error: Python 3.8+ is required{Colors.NC}")
-        return False
-    
-    # Check Git
-    success, _ = run_command(['git', '--version'])
-    if not success:
-        print(f"{Colors.RED}❌ Error: Git is not installed{Colors.NC}")
-        return False
-    
-    # Get venv python
-    venv_python = get_venv_python()
-    
-    # Check DVC in venv
-    success, _ = run_command([str(venv_python), '-c', 'import dvc.cli'])
-    if not success:
-        print(f"{Colors.YELLOW}⚠️  DVC is not installed in venv. Installing now...{Colors.NC}")
-        success, _ = run_command([str(venv_python), '-m', 'pip', 'install', 'dvc[gdrive]'])
-        if not success:
-            print(f"{Colors.RED}❌ Failed to install DVC{Colors.NC}")
-            return False
-    
-    # Check DVC gdrive support
-    success, _ = run_command([str(venv_python), '-c', 'import dvc_gdrive'])
-    if not success:
-        print(f"{Colors.YELLOW}⚠️  DVC gdrive support not found. Installing...{Colors.NC}")
-        success, _ = run_command([str(venv_python), '-m', 'pip', 'install', 'dvc[gdrive]'])
-        if not success:
-            print(f"{Colors.RED}❌ Failed to install DVC gdrive support{Colors.NC}")
-            return False
-    
-    print(f"{Colors.GREEN}✅ All prerequisites met{Colors.NC}\n")
-    return True
-
-def configure_credentials() -> Tuple[bool, VesselVerseConfig]:
-    """Configure user credentials"""
-    print(f"{Colors.YELLOW}[2/6] Configuring user credentials...{Colors.NC}")
-    
-    # Load config
-    config = VesselVerseConfig()
-    
-    # Find credential files
-    creds_dir = config.CREDENTIALS_DIR
-    if not creds_dir.exists():
-        print(f"{Colors.RED}❌ Error: credentials directory not found{Colors.NC}")
-        return False, None
-    
-    cred_files = list(creds_dir.glob('*.json'))
-    if not cred_files:
-        print(f"{Colors.RED}❌ Error: No credential files found in credentials/{Colors.NC}")
-        print("Please contact dataset maintainers to obtain credentials")
-        return False, None
-    
-    print("Available credential files:")
-    for i, cred_file in enumerate(cred_files):
-        print(f"  [{i}] {cred_file.name}")
-    
-    print()
-    choice_str = input(f"Select credential file number [0]: ").strip() or "0"
-    
-    try:
-        choice = int(choice_str)
-        if choice < 0 or choice >= len(cred_files):
-            print(f"{Colors.RED}❌ Invalid selection{Colors.NC}")
-            return False, None
-    except ValueError:
-        print(f"{Colors.RED}❌ Invalid input{Colors.NC}")
-        return False, None
-    
-    selected_cred = cred_files[choice]
-    print(f"{Colors.GREEN}✅ Using credentials: {selected_cred.name}{Colors.NC}\n")
-    
-    # Update config with selected credentials
-    config.user_auth_path = selected_cred
-    
-    return True, config
-
-def configure_dvc_remotes(config: VesselVerseConfig) -> bool:
-    """Configure DVC remotes for user"""
-    print(f"{Colors.YELLOW}[3/6] Configuring DVC remotes...{Colors.NC}")
-    
-    # Get configuration from VesselVerseConfig
-    database_id = config.database_ID
-    user_upload_id = config.user_upload_ID
-    user_auth_path = str(config.user_auth_path)
-    
-    # Remove existing remotes if they exist
-    run_command(['dvc', 'remote', 'remove', 'storage'], cwd=REPO_ROOT)
-    run_command(['dvc', 'remote', 'remove', 'uploads'], cwd=REPO_ROOT)
-    
-    # Add storage remote (read-only for users)
-    print(f"Setting up 'storage' remote (Database ID: {database_id[:20]}...)")
-    success, output = run_command(
-        ['dvc', 'remote', 'add', '-d', 'storage', f'gdrive://{database_id}'],
-        cwd=REPO_ROOT
-    )
-    if not success:
-        print(f"{Colors.RED}❌ Failed to add storage remote{Colors.NC}")
-        return False
-    
-    run_command(
-        ['dvc', 'remote', 'modify', 'storage', 'gdrive_service_account_json_file_path', user_auth_path],
-        cwd=REPO_ROOT
-    )
-    run_command(
-        ['dvc', 'remote', 'modify', 'storage', 'gdrive_use_service_account', 'true'],
-        cwd=REPO_ROOT
-    )
-    
-    # Add uploads remote
-    print(f"Setting up 'uploads' remote (Upload ID: {user_upload_id[:20]}...)")
-    success, output = run_command(
-        ['dvc', 'remote', 'add', 'uploads', f'gdrive://{user_upload_id}'],
-        cwd=REPO_ROOT
-    )
-    if not success:
-        print(f"{Colors.RED}❌ Failed to add uploads remote{Colors.NC}")
-        return False
-    
-    run_command(
-        ['dvc', 'remote', 'modify', 'uploads', 'gdrive_service_account_json_file_path', user_auth_path],
-        cwd=REPO_ROOT
-    )
-    run_command(
-        ['dvc', 'remote', 'modify', 'uploads', 'gdrive_use_service_account', 'true'],
-        cwd=REPO_ROOT
-    )
-    
-    # Enable autostage
-    run_command(['dvc', 'config', 'core.autostage', 'true'], cwd=REPO_ROOT)
-    
-    print(f"{Colors.GREEN}✅ DVC remotes configured{Colors.NC}\n")
-    return True
 
 def user_initial_setup():
     """Function 1: Initial Setup"""
@@ -251,25 +39,32 @@ def user_initial_setup():
     print(f"{Colors.BLUE}   Initial Setup - First Time Configuration        {Colors.NC}")
     print(f"{Colors.BLUE}{'='*55}{Colors.NC}\n")
     
-    if not check_prerequisites():
+    if not check_prerequisites(VENV_PATH, REPO_ROOT):
         return
     
+    datasets_dir = DATASET_GIT_ROOT / "datasets"
+
     success, config = configure_credentials()
     if not success:
         return
     
-    if not configure_dvc_remotes(config):
+    if not configure_dvc_remotes(config, datasets_dir):
         return
-    
-    # Verify setup
-    print(f"{Colors.YELLOW}[4/6] Verifying remote setup...{Colors.NC}")
-    success, output = run_command(['dvc', 'remote', 'list'], cwd=REPO_ROOT)
-    
-    if 'storage' in output and 'uploads' in output:
-        print(f"{Colors.GREEN}✅ User Mode Activated{Colors.NC}\n")
+
+    # Step 4: Verify setup
+    print(f"{Colors.YELLOW}[4/6] Verifying setup...{Colors.NC}")
+    all_datasets = sorted([d for d in datasets_dir.glob('D-*') if d.is_dir()])
+    configured_count = 0
+    for dataset_path in all_datasets:
+        code, output = run_command([str(get_venv_python(VENV_PATH)), '-m', 'dvc', 'remote', 'list'], cwd=dataset_path, capture_output=True)
+        if "storage" in output:
+            configured_count += 1
+    if configured_count > 0:
+        print(f"{Colors.GREEN}✅ {configured_count} dataset(s) configured with DVC remotes{Colors.NC}")
     else:
-        print(f"{Colors.RED}❌ Error: Remote configuration failed{Colors.NC}")
+        print(f"{Colors.RED}❌ Error: No datasets configured{Colors.NC}")
         return
+    print()
     
     # Summary
     print(f"{Colors.BLUE}{'='*55}{Colors.NC}")
@@ -285,29 +80,123 @@ def user_update_dataset():
     print(f"{Colors.BLUE}   Update Dataset - User Mode                     {Colors.NC}")
     print(f"{Colors.BLUE}{'='*55}{Colors.NC}\n")
     
-    # Step 1: Git pull
-    print(f"{Colors.YELLOW}[1/3] Updating Git repository...{Colors.NC}")
-    success, output = run_command(['git', 'pull'], cwd=REPO_ROOT)
-    if success:
-        print(f"{Colors.GREEN}✅ Git repository updated{Colors.NC}\n")
+    # Load config
+    config = VesselVerseConfig()
+
+    # Step 1: Select target dataset (like upload)
+    dataset_base = DATASET_GIT_ROOT / 'datasets'
+    print(f"{Colors.YELLOW}[1/5] Select target dataset...{Colors.NC}")
+    available_datasets = sorted([
+        d.name for d in dataset_base.glob('D-*') 
+        if d.is_dir()
+    ])
+    print("Available datasets:")
+    for i, dataset in enumerate(available_datasets):
+        print(f"  [{i}] {dataset}")
+    print("  [n] Create new dataset")
+    print()
+    choice = input("Select dataset: ").strip().lower()
+    if choice == 'n':
+        new_name = input("Enter new dataset name (without D- prefix): ").strip()
+        selected_dataset = f"D-{new_name}"
+        dataset_dir = dataset_base / selected_dataset
+        dataset_dir.mkdir(parents=True, exist_ok=True)
+        print(f"{Colors.GREEN}✅ Created new dataset: {selected_dataset}{Colors.NC}")
     else:
-        print(f"{Colors.YELLOW}⚠️  Git pull had issues{Colors.NC}\n")
-    
-    # Step 2: DVC pull
-    print(f"{Colors.YELLOW}[2/3] Pulling data from remote...{Colors.NC}")
-    success, output = run_command(['dvc', 'pull'], cwd=REPO_ROOT)
-    
-    if success:
-        print(f"{Colors.GREEN}✅ Data updated{Colors.NC}\n")
+        try:
+            idx = int(choice)
+            if 0 <= idx < len(available_datasets):
+                selected_dataset = available_datasets[idx]
+                dataset_dir = dataset_base / selected_dataset
+            else:
+                print(f"{Colors.RED}❌ Invalid selection{Colors.NC}")
+                return False
+        except ValueError:
+            print(f"{Colors.RED}❌ Invalid input{Colors.NC}")
+            return False
+    print(f"{Colors.GREEN}Target dataset: {selected_dataset}{Colors.NC}")
+    print()
+
+    # Use the data directory inside the selected dataset
+    data_dir = dataset_dir
+    if not data_dir.exists():
+        print(f"{Colors.RED}❌ Error: Data directory not found: {data_dir}{Colors.NC}")
+        return False
+
+    # Update the ID storage based on the selected dataset
+    dataset_name = selected_dataset.replace('D-', '')
+    storage_id = config.get_storage_id(dataset_name)
+    run_command(f'dvc remote modify storage url gdrive://{storage_id}', cwd=dataset_dir)
+
+    # Check DVC config in the selected dataset directory
+    code, output = run_command('dvc remote list', cwd=dataset_dir, capture_output=True)
+    print(f"{Colors.YELLOW}DVC remotes in {dataset_dir}:{Colors.NC}\n{output}")  # Debug print
+    if 'storage' not in output:
+        print(f"{Colors.RED}❌ Error: DVC remotes not configured in {dataset_dir}{Colors.NC}")
+        print("Run option [1] Initial Setup first")
+        return False
+
+    # Step 2: Update Git
+    print(f"{Colors.YELLOW}[2/5] Updating Git repository...{Colors.NC}")
+    code, _ = run_command('git pull', cwd=DATASET_GIT_ROOT)
+    if code == 0:
+        print(f"{Colors.GREEN}✅ Git repository updated{Colors.NC}")
     else:
-        print(f"{Colors.YELLOW}⚠️  Some files may have failed to download{Colors.NC}\n")
-    
+        print(f"{Colors.YELLOW}⚠️  Git pull had issues, continuing anyway...{Colors.NC}")
+    print()
+
+    # Step 3: Restore deleted .dvc files
+    print(f"{Colors.YELLOW}[3/5] Restoring .dvc files if needed...{Colors.NC}")
+    code, output = run_command('git status --short', cwd=data_dir, capture_output=True)
+    deleted_dvc = output.count('.dvc')
+    if deleted_dvc > 0:
+        print(f"  Restoring {deleted_dvc} deleted .dvc file(s)...")
+        run_command('git restore *.dvc', cwd=data_dir)
+        print(f"{Colors.GREEN}✅ .dvc files restored{Colors.NC}")
+    else:
+        print(f"{Colors.GREEN}✅ All .dvc files present{Colors.NC}")
+    print()
+
+    # Step 4: Scan for .dvc files
+    print(f"{Colors.YELLOW}[4/5] Scanning for .dvc files...{Colors.NC}")
+    dvc_files = sorted(f for f in data_dir.glob('*.dvc') if f.is_file())
+    if not dvc_files:
+        print(f"{Colors.YELLOW}⚠️  No .dvc files found in {data_dir}{Colors.NC}")
+        return True
+    print(f"{Colors.GREEN}Found {len(dvc_files)} tracked item(s):{Colors.NC}")
+    for dvc_file in dvc_files:
+        print(f"  • {dvc_file.stem}")
+    print()
+
+    # Step 5: Download data
+    print(f"{Colors.YELLOW}[5/5] Downloading updates from remote...{Colors.NC}")
+    print()
+    total_updated = 0
+    total_failed = 0
+    for dvc_file in dvc_files:
+        dvc_name = dvc_file.stem
+        print(f"{Colors.CYAN}Pulling: {dvc_name}{Colors.NC}")
+        code, _ = run_command(f'dvc pull "{dvc_file.name}"', cwd=dataset_dir)
+        if code == 0:
+            print(f"  {Colors.GREEN}✅ {dvc_name} downloaded{Colors.NC}")
+            total_updated += 1
+        else:
+            print(f"  {Colors.YELLOW}⚠️  {dvc_name} - Failed to download{Colors.NC}")
+            total_failed += 1
+    print()
+
     # Summary
-    print(f"{Colors.BLUE}{'='*55}{Colors.NC}")
-    print(f"{Colors.GREEN}          Update Complete! 🎉{Colors.NC}")
-    print(f"{Colors.BLUE}{'='*55}{Colors.NC}\n")
-    print("Your data is ready to work with!")
-    print(f"Location: {REPO_ROOT / 'VESSELVERSE_DATA_IXI' / 'data'}\n")
+    print(f"{Colors.BLUE}═══════════════════════════════════════════════════{Colors.NC}")
+    print(f"{Colors.GREEN}          Download Complete! 🎉{Colors.NC}")
+    print(f"{Colors.BLUE}═══════════════════════════════════════════════════{Colors.NC}")
+    print()
+    print(f"{Colors.BLUE}Update Summary:{Colors.NC}")
+    print(f"  Total datasets processed: {Colors.GREEN}{len(dvc_files)}{Colors.NC}")
+    print(f"  Successfully updated:     {Colors.GREEN}{total_updated}{Colors.NC}")
+    if total_failed > 0:
+        print(f"  Warnings:                 {Colors.YELLOW}{total_failed}{Colors.NC}")
+    print()
+    return True
 
 def user_upload_data():
     """Function 3: Upload Data"""
@@ -315,167 +204,276 @@ def user_upload_data():
     print(f"{Colors.BLUE}   Upload Data - User Mode                        {Colors.NC}")
     print(f"{Colors.BLUE}{'='*55}{Colors.NC}\n")
     
-    data_dir = REPO_ROOT / 'VESSELVERSE_DATA_IXI' / 'data'
+    # Load config
+    config = VesselVerseConfig()
     
-    if not data_dir.exists():
-        print(f"{Colors.RED}❌ Error: Data directory not found{Colors.NC}")
-        return
-    
-    # Step 1: List folders to track
-    print(f"{Colors.YELLOW}[1/5] Scanning for modified folders...{Colors.NC}")
-    
-    folders = sorted([d.name for d in data_dir.iterdir() if d.is_dir() and not d.name.startswith('.')])
-    
-    if not folders:
-        print(f"{Colors.RED}❌ No folders found{Colors.NC}")
-        return
-    
-    print("Available folders:")
-    for i, folder in enumerate(folders):
-        dvc_file = data_dir / f"{folder}.dvc"
-        status = "already tracked" if dvc_file.exists() else "not tracked"
-        print(f"  [{i}] {folder} ({status})")
-    
-    print(f"  [a] All folders\n")
-    
-    choice_str = input("Select folder(s) to upload (comma-separated or 'a' for all): ").strip().lower()
-    
-    selected_folders = []
-    if choice_str == 'a':
-        selected_folders = folders
+    # Step 1: Select target dataset
+    dataset_base = DATASET_GIT_ROOT / 'datasets'
+    print(f"{Colors.YELLOW}[1/5] Select target dataset...{Colors.NC}")
+    available_datasets = sorted([
+        d.name for d in dataset_base.glob('D-*') 
+        if d.is_dir()
+    ])
+    print("Available datasets:")
+    for i, dataset in enumerate(available_datasets):
+        print(f"  [{i}] {dataset}")
+    print("  [n] Create new dataset")
+    print()
+    choice = input("Select dataset: ").strip().lower()
+    if choice == 'n':
+        new_name = input("Enter new dataset name (without D- prefix): ").strip()
+        selected_dataset = f"D-{new_name}"
+        dataset_dir = dataset_base / selected_dataset
+        dataset_dir.mkdir(parents=True, exist_ok=True)
+        print(f"{Colors.GREEN}✅ Created new dataset: {selected_dataset}{Colors.NC}")
     else:
         try:
-            for choice in choice_str.split(','):
-                idx = int(choice.strip())
-                if 0 <= idx < len(folders):
-                    selected_folders.append(folders[idx])
+            idx = int(choice)
+            if 0 <= idx < len(available_datasets):
+                selected_dataset = available_datasets[idx]
+                dataset_dir = dataset_base / selected_dataset
+            else:
+                print(f"{Colors.RED}❌ Invalid selection{Colors.NC}")
+                return False
         except ValueError:
             print(f"{Colors.RED}❌ Invalid input{Colors.NC}")
-            return
+            return False
+    print(f"{Colors.GREEN}Target dataset: {selected_dataset}{Colors.NC}")
+    print()
+
+    # Update the ID storage based on the selected dataset
+    dataset_name = selected_dataset.replace('D-', '')
+    storage_id = config.get_storage_id(dataset_name)
+    run_command(f'dvc remote modify uploads url gdrive://{storage_id}', cwd=dataset_dir)
+
+    # Use the data directory inside the selected dataset
+    data_dir = dataset_dir 
+    if not data_dir.exists():
+        print(f"{Colors.RED}❌ Error: Data directory not found: {data_dir}{Colors.NC}")
+        return False
+
+    # Check DVC config in the selected dataset directory
+    code, output = run_command('dvc remote list', cwd=dataset_dir, capture_output=True)
+    print(f"{Colors.YELLOW}DVC remotes in {dataset_dir}:{Colors.NC}\n{output}")  # Debug print
+    if 'storage' not in output:
+        print(f"{Colors.RED}❌ Error: DVC remotes not configured in {dataset_dir}{Colors.NC}")
+        print("Run option [1] Initial Setup first")
+        return False
+
+    # Step 2: List and select folders
+    print(f"{Colors.YELLOW}[2/5] Listing available folders...{Colors.NC}")
+    
+    # Find folders with data
+    available_folders = []
+    folder_display = []
+    
+    for folder in sorted(data_dir.iterdir()):
+        if folder.is_dir() and not folder.name.startswith('.'):
+            file_count = len(list(folder.glob('**/*')))
+            if file_count > 0:
+                available_folders.append(folder.name)
+                if (folder.with_suffix('.dvc')).exists():
+                    folder_display.append(f"  [{len(available_folders)-1}] {folder.name} {Colors.GREEN}(already tracked, {file_count} files){Colors.NC}")
+                else:
+                    folder_display.append(f"  [{len(available_folders)-1}] {folder.name} {Colors.YELLOW}(not tracked, {file_count} files){Colors.NC}")
+    
+    if not available_folders:
+        print(f"{Colors.RED}❌ No folders with data found{Colors.NC}")
+        return False
+    
+    for display in folder_display:
+        print(display)
+    print("  [a] All folders")
+    print()
+    
+    choice = input("Select folder(s) to upload (comma-separated numbers or 'a' for all): ").strip()
+    
+    selected_folders = []
+    if choice.lower() == 'a':
+        selected_folders = available_folders
+    else:
+        try:
+            indices = [int(c.strip()) for c in choice.split(',')]
+            for idx in indices:
+                if 0 <= idx < len(available_folders):
+                    selected_folders.append(available_folders[idx])
+        except ValueError:
+            print(f"{Colors.RED}❌ Invalid input{Colors.NC}")
+            return False
     
     if not selected_folders:
         print(f"{Colors.RED}❌ No valid folders selected{Colors.NC}")
-        return
+        return False
     
-    print(f"{Colors.GREEN}✅ Selected {len(selected_folders)} folder(s){Colors.NC}\n")
-    
-    # Step 2: Track with DVC
-    print(f"{Colors.YELLOW}[2/5] Adding folders to DVC...{Colors.NC}")
+    print(f"{Colors.GREEN}✅ Selected {len(selected_folders)} folder(s) for upload{Colors.NC}")
+    print()
+
+    # Step 2: Track folders with DVC
+    print(f"{Colors.YELLOW}[2/7] Adding folders to DVC...{Colors.NC}")
+
     tracked_folders = []
-    
     for folder in selected_folders:
         print(f"{Colors.CYAN}Processing: {folder}{Colors.NC}")
-        success, output = run_command(['dvc', 'add', folder], cwd=data_dir)
-        
-        if success:
+        print(f"  Running: dvc add {folder}")
+        code, _ = run_command(f'dvc add "{folder}"', cwd=dataset_dir)
+        if code == 0:
             print(f"  {Colors.GREEN}✅ Added {folder} to DVC{Colors.NC}")
             tracked_folders.append(folder)
         else:
-            print(f"  {Colors.RED}❌ Failed to add {folder}{Colors.NC}")
-    
+            print(f"  {Colors.RED}❌ Failed to add {folder} to DVC{Colors.NC}")
+
+    print()
+
     if not tracked_folders:
         print(f"{Colors.RED}❌ No folders were tracked{Colors.NC}")
-        return
-    
-    print()
-    
-    # Step 3: Commit to Git
-    print(f"{Colors.YELLOW}[3/5] Committing to Git...{Colors.NC}")
-    
-    # Stage files
-    for folder in tracked_folders:
-        run_command(['git', 'add', f'{folder}.dvc'], cwd=data_dir)
-    
-    run_command(['git', 'add', '.gitignore'], cwd=data_dir)
-    
-    commit_msg = input("Enter commit message [Updated data]: ").strip() or "Updated data"
-    success, _ = run_command(['git', 'commit', '-m', commit_msg], cwd=REPO_ROOT)
-    
-    if success:
-        print(f"{Colors.GREEN}✅ Changes committed{Colors.NC}\n")
-    else:
-        print(f"{Colors.YELLOW}⚠️  No changes to commit or commit failed{Colors.NC}\n")
-    
-    # Step 4: Push to DVC
-    print(f"{Colors.YELLOW}[4/5] Pushing to DVC uploads remote...{Colors.NC}")
-    
-    for folder in tracked_folders:
-        dvc_file = data_dir / f"{folder}.dvc"
-        print(f"{Colors.CYAN}Pushing: {folder}{Colors.NC}")
-        success, _ = run_command(['dvc', 'push', '-r', 'uploads', str(dvc_file)], cwd=REPO_ROOT)
-        
-        if success:
-            print(f"  {Colors.GREEN}✅ Pushed{Colors.NC}")
-        else:
-            print(f"  {Colors.RED}❌ Failed to push{Colors.NC}")
-    
-    print()
-    
-    # Step 5: Push to Git
-    print(f"{Colors.YELLOW}[5/5] Pushing to Git...{Colors.NC}")
-    success, _ = run_command(['git', 'push'], cwd=REPO_ROOT)
-    
-    if success:
-        print(f"{Colors.GREEN}✅ Pushed to Git{Colors.NC}\n")
-    else:
-        print(f"{Colors.YELLOW}⚠️  Git push failed{Colors.NC}\n")
-    
-    # Summary
-    print(f"{Colors.BLUE}{'='*55}{Colors.NC}")
-    print(f"{Colors.GREEN}          Upload Complete! 🎉{Colors.NC}")
-    print(f"{Colors.BLUE}{'='*55}{Colors.NC}\n")
-    print(f"Your modifications are ready for owner review!")
-    print(f"Owner will review and approve via: [4] Review Uploads\n")
+        return False
 
-def user_switch_dataset():
-    """Function 4: Switch Dataset"""
-    print(f"{Colors.BLUE}{'='*55}{Colors.NC}")
-    print(f"{Colors.BLUE}   Switch Dataset - User Mode                     {Colors.NC}")
-    print(f"{Colors.BLUE}{'='*55}{Colors.NC}\n")
+    # Step 3: Stage .dvc files for Git
+    print(f"{Colors.YELLOW}[3/7] Staging .dvc files and .gitignore for Git...{Colors.NC}")
     
-    print(f"{Colors.YELLOW}This feature allows you to work with different datasets.{Colors.NC}\n")
+    for folder in tracked_folders:
+        dvc_file = data_dir / f'{folder}.dvc'
+        if dvc_file.exists():
+            print(f"  Running: git add {folder}.dvc")
+            run_command(f'git add "{folder}.dvc"', cwd=data_dir)
     
-    datasets_dir = REPO_ROOT / 'VesselVerse-Dataset' / 'datasets'
+    print("  Running: git add .gitignore")
+    run_command('git add .gitignore', cwd=data_dir)
     
-    if not datasets_dir.exists():
-        print(f"{Colors.RED}❌ Error: Datasets directory not found{Colors.NC}")
-        return
+    print(f"{Colors.GREEN}✅ Files staged{Colors.NC}")
+    print()
+
+    # Step 4: Commit to Git
+    print(f"{Colors.YELLOW}[4/7] Committing to Git...{Colors.NC}")
     
-    datasets = sorted([d.name for d in datasets_dir.iterdir() if d.is_dir() and d.name.startswith('D-')])
+    commit_msg = input("Enter commit message for .dvc files: ").strip() or "Track data with DVC"
     
-    if not datasets:
-        print(f"{Colors.RED}❌ No datasets found{Colors.NC}")
-        return
-    
-    print("Available datasets:")
-    for i, dataset in enumerate(datasets):
-        print(f"  [{i}] {dataset}")
+    code, output = run_command('git diff --cached --quiet', cwd=data_dir)
+    if code == 0:
+        print(f"{Colors.YELLOW}⚠️  No changes to commit{Colors.NC}")
+    else:
+        print(f"  Running: git commit -m \"{commit_msg}\"")
+        code, _ = run_command(f'git commit -m "{commit_msg}"', cwd=data_dir)
+        if code == 0:
+            print(f"{Colors.GREEN}✅ Changes committed to Git{Colors.NC}")
+        else:
+            print(f"{Colors.RED}❌ Git commit failed{Colors.NC}")
+            return False
     
     print()
-    choice_str = input("Select dataset to switch to: ").strip()
+
+    # Step 5: Copy .dvc files to dataset directory
+    print(f"{Colors.YELLOW}[5/7] Copying .dvc files to dataset directory...{Colors.NC}")
     
-    try:
-        choice = int(choice_str)
-        if 0 <= choice < len(datasets):
-            selected = datasets[choice]
-            print(f"{Colors.GREEN}✅ Switched to: {selected}{Colors.NC}")
-            print(f"\nNext steps:")
-            print(f"  1. Run [2] Update Dataset to download data")
-            print(f"  2. Work with the data")
-            print(f"  3. Run [3] Upload Data to share your work\n")
-        else:
-            print(f"{Colors.RED}❌ Invalid selection{Colors.NC}")
-    except ValueError:
-        print(f"{Colors.RED}❌ Invalid input{Colors.NC}")
+    import shutil
+    for folder in tracked_folders:
+        src = data_dir / f'{folder}.dvc'
+        dst = dataset_dir / f'{folder}.dvc'
+        if src.exists():
+            try:
+                if src.resolve() != dst.resolve():
+                    print(f"  Copying: {folder}.dvc -> {dataset_dir.relative_to(REPO_ROOT)}/")
+                    shutil.copy(src, dst)
+                else:
+                    print(f"  Skipped copying {folder}.dvc (source and destination are the same)")
+            except Exception as e:
+                print(f"{Colors.RED}❌ Error copying {folder}.dvc: {e}{Colors.NC}")
+    
+    print(f"{Colors.GREEN}✅ .dvc files copied{Colors.NC}")
+    print()
+
+    # Step 6: Push data to DVC remote
+    print(f"{Colors.YELLOW}[6/7] Pushing data to DVC remote...{Colors.NC}")
+    print("This may take a while depending on data size...")
+    print()
+    
+    push_failed = False
+    for folder in tracked_folders:
+        dvc_file = data_dir / f'{folder}.dvc'
+        if dvc_file.exists():
+            print(f"{Colors.CYAN}Pushing: {folder}{Colors.NC}")
+            code, _ = run_command(f'dvc push "{dvc_file.name}"', cwd=dataset_dir)
+            if code != 0:
+                print(f"  {Colors.RED}❌ Failed to push {folder}{Colors.NC}")
+                push_failed = True
+            else:
+                print(f"  {Colors.GREEN}✅ {folder} pushed to remote{Colors.NC}")
+    
+    if push_failed:
+        print()
+        print(f"{Colors.YELLOW}⚠️  Some files failed to push{Colors.NC}")
+        print(f"{Colors.YELLOW}Possible reasons:{Colors.NC}")
+        print("  • Your credentials may not have write permissions")
+        print("  • Network connection issues")
+        print("  • Google Drive quota exceeded")
+        return False
+    else:
+        print()
+        print(f"{Colors.GREEN}✅ All selected data pushed to DVC remote{Colors.NC}")
+    
+    print()
+
+    # Step 7: Push .dvc files to Git
+    print(f"{Colors.YELLOW}[7/7] Pushing .dvc files to Git remote...{Colors.NC}")
+    
+    # Stage .dvc files in dataset directory
+    for folder in tracked_folders:
+        dvc_file = dataset_dir / f'{folder}.dvc'
+        if dvc_file.exists():
+            rel_path = dvc_file.relative_to(DATASET_GIT_ROOT)
+            print(f"  Running: git add {rel_path}")
+            run_command(f'git add "{rel_path}"', cwd=DATASET_GIT_ROOT)
+    
+    # Commit if there are changes
+    code, _ = run_command('git diff --cached --quiet', cwd=DATASET_GIT_ROOT)
+    if code == 0:
+        print(f"{Colors.YELLOW}⚠️  No new .dvc files to commit in dataset directory{Colors.NC}")
+    else:
+        print(f"  Running: git commit -m \"Add .dvc files to {selected_dataset}\"")
+        code, _ = run_command(f'git commit -m "Add .dvc files to {selected_dataset}"', cwd=DATASET_GIT_ROOT)
+        if code == 0:
+            print(f"{Colors.GREEN}✅ .dvc files committed{Colors.NC}")
+    
+    # Push to Git
+    print("  Running: git push")
+    code, _ = run_command('git push', cwd=DATASET_GIT_ROOT)
+    if code == 0:
+        print(f"{Colors.GREEN}✅ Pushed to Git remote{Colors.NC}")
+    else:
+        print(f"{Colors.YELLOW}⚠️  Git push failed. Push manually later with: git push{Colors.NC}")
+    
+    print()
+
+    # Summary
+    print(f"{Colors.BLUE}═══════════════════════════════════════════════════{Colors.NC}")
+    print(f"{Colors.GREEN}          Upload Complete! 🎉{Colors.NC}")
+    print(f"{Colors.BLUE}═══════════════════════════════════════════════════{Colors.NC}")
+    print()
+    print(f"{Colors.BLUE}Upload Summary:{Colors.NC}")
+    print(f"  Source Directory:  {Colors.GREEN}VESSELVERSE_DATA_IXI/data{Colors.NC}")
+    print(f"  Dataset Directory: {Colors.GREEN}{dataset_dir.relative_to(REPO_ROOT)}{Colors.NC}")
+    print(f"  Folders Uploaded:  {Colors.GREEN}{len(tracked_folders)}{Colors.NC}")
+    for folder in tracked_folders:
+        print(f"    • {folder}")
+    print()
+    print(f"{Colors.BLUE}What happened:{Colors.NC}")
+    print(f"  ✅ Data tracked with DVC (created .dvc files)")
+    print(f"  ✅ .dvc files and .gitignore committed to Git")
+    print(f"  ✅ Data pushed to DVC remote storage")
+    print(f"  ✅ .dvc files pushed to Git remote")
+    print()
+    print(f"Your modifications are ready for owner review!")
+
+
 
 def main():
     """Main execution loop"""
     # Setup virtual environment first
-    if not setup_virtual_environment():
+    if not setup_virtual_environment(VENV_PATH, REPO_ROOT):
         print(f"{Colors.RED}Failed to setup virtual environment. Exiting...{Colors.NC}")
         sys.exit(1)
     
-    print_header()
+    display_header()
     
     while True:
         print_menu()
@@ -488,8 +486,6 @@ def main():
         elif choice == '3':
             user_upload_data()
         elif choice == '4':
-            user_switch_dataset()
-        elif choice == '5':
             print(f"{Colors.BLUE}Goodbye!{Colors.NC}\n")
             sys.exit(0)
         else:
