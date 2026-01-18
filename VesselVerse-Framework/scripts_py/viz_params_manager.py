@@ -493,10 +493,10 @@ class VizParamsManager:
             traceback.print_exc()
             return False
 
-                # Optionally handle framework_specific
-                if "framework_specific" in params:
-                    if framework_name and framework_name in params["framework_specific"]:
-                        print(f"ℹ️  Found specific parameters for framework: {framework_name}")
+            # Optionally handle framework_specific
+            if "framework_specific" in params:
+                if framework_name and framework_name in params["framework_specific"]:
+                    print(f"ℹ️  Found specific parameters for framework: {framework_name}")
                         # Qui puoi aggiungere logica per applicare parametri specifici
                         # Esempio: params["framework_specific"][framework_name]
     
