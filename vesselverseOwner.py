@@ -48,19 +48,27 @@ def initial_owner_setup():
     print()
 
     # Step 1: Check prerequisites
-    print(f"{Colors.YELLOW}[1/4] Checking prerequisites...{Colors.NC}")
+    print(f"{Colors.YELLOW}[1/3] Checking prerequisites...{Colors.NC}")
     if not check_prerequisites(VENV_PATH, REPO_ROOT):
         return False
     print()
 
     # Step 2: Configure credentials
+    print(f"{Colors.YELLOW}[2/3] Configuring user credentials...{Colors.NC}")
+
     success, config = configure_credentials()
     if not success:
         return False
     print()
 
     # Step 3: Initialize and configure DVC in each dataset
-    print(f"{Colors.YELLOW}[3/6] Initializing all datasets...{Colors.NC}")
+    print(f"{Colors.YELLOW}[3/3] Configuring dvc remotes...{Colors.NC}")
+
+    datasets_dir = DATASET_GIT_ROOT / "datasets"
+    if not configure_dvc_remotes(config, datasets_dir):
+        return False
+    
+    """ print(f"{Colors.YELLOW}[3/6] Initializing all datasets...{Colors.NC}")
     datasets_dir = DATASET_GIT_ROOT / "datasets"
     if not datasets_dir.exists():
         print(f"{Colors.RED}❌ Error: Datasets directory not found: {datasets_dir}{Colors.NC}")
@@ -81,7 +89,7 @@ def initial_owner_setup():
     database_id = config.database_ID
     user_upload_id = config.user_upload_ID
 
-    configure_dvc_remotes(config, datasets_dir)
+    configure_dvc_remotes(config, datasets_dir) 
 
     # Step 4: Verify setup
     print(f"{Colors.YELLOW}[4/6] Verifying setup...{Colors.NC}")
@@ -95,7 +103,10 @@ def initial_owner_setup():
     else:
         print(f"{Colors.RED}❌ Error: No datasets configured{Colors.NC}")
         return False
-    print()
+    print() """
+
+    database_id = config.database_ID
+    user_upload_id = config.user_upload_ID
 
     # Summary
     print(f"{Colors.BLUE}═══════════════════════════════════════════════════{Colors.NC}")

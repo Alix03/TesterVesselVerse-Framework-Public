@@ -39,20 +39,39 @@ def user_initial_setup():
     print(f"{Colors.BLUE}   Initial Setup - First Time Configuration        {Colors.NC}")
     print(f"{Colors.BLUE}{'='*55}{Colors.NC}\n")
     
+    print(f"{Colors.YELLOW}[1/4] Checking prerequisites...{Colors.NC}")
+    print()
     if not check_prerequisites(VENV_PATH, REPO_ROOT):
         return
     
     datasets_dir = DATASET_GIT_ROOT / "datasets"
 
+
+    print(f"{Colors.YELLOW}[2/4] Configuring user credentials...{Colors.NC}")
+    print()
+
     success, config = configure_credentials()
     if not success:
         return
     
+    print(f"{Colors.YELLOW}[3/4] Configuring user folder...{Colors.NC}")
+    print()
+    expert_dir = datasets_dir / "D-Expert"
+    if not expert_dir.exists():
+        expert_dir.mkdir(parents=True)
+        print(f"{Colors.GREEN}✅ Cartella personale D-Expert creata: {expert_dir}{Colors.NC}")
+    else:
+        print(f"{Colors.YELLOW}ℹ️ Cartella D-Expert già esistente: {expert_dir}{Colors.NC}") 
+
+
+    print(f"{Colors.YELLOW}[4/4] Configuring dvc remotes...{Colors.NC}")
+    print()
+
     if not configure_dvc_remotes(config, datasets_dir):
         return
-
-    # Step 4: Verify setup
-    print(f"{Colors.YELLOW}[4/6] Verifying setup...{Colors.NC}")
+    
+    """ # Step 4: Verify setup
+    print(f"{Colors.YELLOW}[4/6] Configuring dvc remotes...{Colors.NC}")
     all_datasets = sorted([d for d in datasets_dir.glob('D-*') if d.is_dir()])
     configured_count = 0
     for dataset_path in all_datasets:
@@ -64,7 +83,7 @@ def user_initial_setup():
     else:
         print(f"{Colors.RED}❌ Error: No datasets configured{Colors.NC}")
         return
-    print()
+    print() """
     
     # Summary
     print(f"{Colors.BLUE}{'='*55}{Colors.NC}")
@@ -382,7 +401,7 @@ def user_upload_data():
     print(f"{Colors.GREEN}✅ .dvc files copied{Colors.NC}")
     print()
 
-    # Step 6: Push data to DVC remote
+   # Step 6: Push data to DVC remote
     print(f"{Colors.YELLOW}[6/7] Pushing data to DVC remote...{Colors.NC}")
     print("This may take a while depending on data size...")
     print()
@@ -392,13 +411,18 @@ def user_upload_data():
         dvc_file = data_dir / f'{folder}.dvc'
         if dvc_file.exists():
             print(f"{Colors.CYAN}Pushing: {folder}{Colors.NC}")
-            code, _ = run_command(f'dvc push "{dvc_file.name}"', cwd=dataset_dir)
+            code, output = run_command(f'dvc push "{dvc_file.name}"', cwd=dataset_dir, capture_output=True)
             if code != 0:
-                print(f"  {Colors.RED}❌ Failed to push {folder}{Colors.NC}")
+                if "403" in output or "insufficient rights" in output.lower():
+                    print(f"  {Colors.RED}❌ Failed to push {folder}: Insufficient Rights (errore 403).{Colors.NC}")
+                    print(f"  {Colors.YELLOW}Please verify that you have the correct permissions for the remote control or contact your administrator.{Colors.NC}")
+                else:
+                    print(f"  {Colors.RED}❌ Failed to push {folder}{Colors.NC}")
                 push_failed = True
             else:
                 print(f"  {Colors.GREEN}✅ {folder} pushed to remote{Colors.NC}")
     
+
     if push_failed:
         print()
         print(f"{Colors.YELLOW}⚠️  Some files failed to push{Colors.NC}")

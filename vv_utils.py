@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 
-# ANSI Color codes
+### ANSI Color codes
 class Colors:
     RED = '\033[0;31m'
     GREEN = '\033[0;32m'
@@ -22,9 +22,11 @@ class Colors:
                 if not attr.startswith('_') and attr != 'disable_on_windows':
                     setattr(Colors, attr, '')
 
+### Sets up DVC remotes
+
 def configure_dvc_remotes(config: VesselVerseConfig, datasets_dir: Path = None) -> bool:
-    """Configure DVC remotes for all datasets (owner/user logic)"""
-    print(f"{Colors.YELLOW}[3/6] Initializing all datasets...{Colors.NC}")
+    """Sets up DVC remotes (Google Drive) for all datasets, 
+        initializing DVC if needed and configuring storage/upload remotes using credentials."""
     if datasets_dir is None:
         repo_root = get_repo_root()
         datasets_dir = repo_root / 'VesselVerse-Dataset' / 'datasets'
@@ -90,7 +92,7 @@ def configure_dvc_remotes(config: VesselVerseConfig, datasets_dir: Path = None) 
     print()
 
     # Step 4: Verify setup
-    print(f"{Colors.YELLOW}[4/6] Verifying setup...{Colors.NC}")
+    print(f"{Colors.YELLOW}Verifying setup...{Colors.NC}")
     configured_count = 0
     for dataset_path in all_datasets:
         code, output = run_command(f'"{venv_python}" -m dvc remote list', cwd=dataset_path, capture_output=True)
@@ -104,17 +106,25 @@ def configure_dvc_remotes(config: VesselVerseConfig, datasets_dir: Path = None) 
     print()
     return True
 
+###  Returns the root directory of the repository
+
 def get_repo_root() -> Path:
     return Path(__file__).parent.resolve()
 
+### Returns the path to the Python virtual environment in VesselVerse-Dataset
+
 def get_venv_path(repo_root: Path) -> Path:
     return repo_root / "VesselVerse-Dataset" / ".venv"
+
+### Returns the path to the Python executable in the virtual environment, handling OS differences
 
 def get_venv_python(venv_path: Path) -> Path:
     if sys.platform == 'win32':
         return venv_path / 'Scripts' / 'python.exe'
     else:
         return venv_path / 'bin' / 'python'
+
+### Runs a shell command and handles output
 
 def run_command(cmd: str, cwd: Optional[Path] = None, capture_output: bool = False, repo_root: Optional[Path] = None) -> Tuple[int, str]:
     """
@@ -150,8 +160,11 @@ def run_command(cmd: str, cwd: Optional[Path] = None, capture_output: bool = Fal
         print(f"{Colors.RED}❌ Error running command: {e}{Colors.NC}")
         return 1, str(e)
 
+### Check if all required tools are installed
+
 def check_prerequisites(venv_path: Path, repo_root: Path, get_venv_python_func=get_venv_python, run_command_func=run_command) -> bool:
-    """Check if all required tools are installed"""
+    """Checks if Python, Git, DVC, and DVC gdrive support are installed, 
+        installing DVC if missing"""
     print(f"{Colors.YELLOW}Checking prerequisites...{Colors.NC}")
     import sys
     # Check Python 3
@@ -184,6 +197,7 @@ def check_prerequisites(venv_path: Path, repo_root: Path, get_venv_python_func=g
     print(f"{Colors.GREEN}✅ All prerequisites met{Colors.NC}")
     return True
 
+### Manage Virtual env
 
 def setup_virtual_environment(venv_path: Path, repo_root: Path) -> bool:
     """
@@ -208,10 +222,11 @@ def setup_virtual_environment(venv_path: Path, repo_root: Path) -> bool:
         return False
     return True
 
+### Configure user credentials
 
 def configure_credentials() -> Tuple[bool, VesselVerseConfig]:
-    """Configure user credentials"""
-    print(f"{Colors.YELLOW}[2/6] Configuring user credentials...{Colors.NC}")
+    """Lets the user select a credentials JSON file, 
+        updates the config, and returns the config object."""
     
     # Load config
     config = VesselVerseConfig()
