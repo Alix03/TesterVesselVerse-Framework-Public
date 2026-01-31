@@ -173,6 +173,7 @@ class DatasetRegistry:
                             ]
                         )
                         self.register_dataset(ixi_config)
+                        registered = True
                         
                     elif dataset_name == "COW23MR":
                         cow23mr_config = DatasetConfig(
@@ -198,6 +199,7 @@ class DatasetRegistry:
                             ]
                         )
                         self.register_dataset(cow23mr_config)
+                        registered = True
                         
                     elif dataset_name == "ITKTubeTK":
                         itk_config = DatasetConfig(
@@ -214,6 +216,7 @@ class DatasetRegistry:
                             ]
                         )
                         self.register_dataset(itk_config)
+                        registered = True
                         
                     # Priority 3: Generic fallback - auto-detect everything
                     if not registered:

@@ -1,12 +1,20 @@
 #!/bin/bash
 
-CONFIG_FILE="$(dirname "$(dirname "$(dirname "$(realpath "$0")")")")/config.sh"
 
-if [[ -f "$CONFIG_FILE" ]]; then
-    source "$CONFIG_FILE"
-else
+# Path to config.py
+CONFIG_FILE="$(dirname "$(dirname "$(dirname "$(realpath "$0")")")")/config.py"
+
+if [[ ! -f "$CONFIG_FILE" ]]; then
     echo "Configuration file $CONFIG_FILE not found!"
     echo "(Complete path: $(realpath "$CONFIG_FILE"))"
+    exit 1
+fi
+
+# Get SLICER_PATH from config.py
+SLICER_PATH="$(python3 "$CONFIG_FILE" --get SLICER_PATH)"
+
+if [[ -z "$SLICER_PATH" ]]; then
+    echo "SLICER_PATH not found in config.py!"
     exit 1
 fi
 

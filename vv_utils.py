@@ -46,14 +46,14 @@ def configure_dvc_remotes(config: VesselVerseConfig, datasets_dir: Path = None) 
     print("Configuring DVC for each dataset...")
     print()
 
-    database_id = config.database_ID
-    user_upload_id = config.user_upload_ID
-    user_auth_path = str(config.user_auth_path)
-
     venv_path = get_venv_path(get_repo_root())
     venv_python = str(get_venv_python(venv_path))
+    user_auth_path = str(config.user_auth_path)
 
     for dataset_path in all_datasets:
+        dataset_name = dataset_path.name.replace('D-', '')
+        storage_id = config.get_storage_id(dataset_name)
+
         print(f"{Colors.CYAN}► Processing: {dataset_path.name}{Colors.NC}")
         dvc_dir = dataset_path / ".dvc"
         # Initialize DVC if not present
@@ -68,23 +68,25 @@ def configure_dvc_remotes(config: VesselVerseConfig, datasets_dir: Path = None) 
         else:
             print("  ✓ DVC already initialized")
 
-        # Remove existing remotes
+        # Remove existing remotes (first unset default to avoid orphaned references)
+        run_command(f'"{venv_python}" -m dvc config -u core.remote', cwd=dataset_path)
         run_command(f'"{venv_python}" -m dvc remote remove storage', cwd=dataset_path)
         run_command(f'"{venv_python}" -m dvc remote remove uploads', cwd=dataset_path)
 
-        # Add storage remote
-        if database_id and user_auth_path:
-            run_command(f'"{venv_python}" -m dvc remote add -d storage "gdrive://{database_id}"', cwd=dataset_path)
+        # Add storage remote (per-dataset, only if defined)
+        if storage_id and user_auth_path:
+            run_command(f'"{venv_python}" -m dvc remote add -d storage "gdrive://{storage_id}"', cwd=dataset_path)
             run_command(f'"{venv_python}" -m dvc remote modify storage gdrive_service_account_json_file_path "{user_auth_path}"', cwd=dataset_path)
             run_command(f'"{venv_python}" -m dvc remote modify storage gdrive_use_service_account true', cwd=dataset_path)
             print("  ✓ Storage remote configured")
-
-        # Add uploads remote
-        if user_upload_id and user_auth_path:
-            run_command(f'"{venv_python}" -m dvc remote add uploads "gdrive://{user_upload_id}"', cwd=dataset_path)
+            
+            # Add uploads remote (all datasets use the same storage ID for uploads)
+            run_command(f'"{venv_python}" -m dvc remote add uploads "gdrive://{storage_id}"', cwd=dataset_path)
             run_command(f'"{venv_python}" -m dvc remote modify uploads gdrive_service_account_json_file_path "{user_auth_path}"', cwd=dataset_path)
             run_command(f'"{venv_python}" -m dvc remote modify uploads gdrive_use_service_account true', cwd=dataset_path)
             print("  ✓ Uploads remote configured")
+        else:
+            print(f"  {Colors.YELLOW}⚠️  Storage ID not defined for {dataset_name}, remote not configured!{Colors.NC}")
 
         print()
 
@@ -206,9 +208,35 @@ def setup_virtual_environment(venv_path: Path, repo_root: Path) -> bool:
     """
     if not venv_path.exists():
         print(f"{Colors.YELLOW}Creating virtual environment in VesselVerse-Dataset...{Colors.NC}")
+        
+        # Try to use Python 3.12, 3.11, or fall back to sys.executable
+        python_candidates = ['python3.12', 'python3.11', 'python3', sys.executable]
+        python_cmd = None
+        
+        for candidate in python_candidates:
+            try:
+                result = subprocess.run(
+                    [candidate, '--version'],
+                    capture_output=True,
+                    text=True
+                )
+                if result.returncode == 0:
+                    version = result.stdout.strip()
+                    # Check if it's at least Python 3.11
+                    if 'Python 3.1' in version and not 'Python 3.10' in version and not 'Python 3.9' in version:
+                        python_cmd = candidate
+                        print(f"{Colors.GREEN}Using {version}{Colors.NC}")
+                        break
+            except FileNotFoundError:
+                continue
+        
+        if not python_cmd:
+            python_cmd = sys.executable
+            print(f"{Colors.YELLOW}⚠️  Using {sys.executable} (Python 3.11+ recommended){Colors.NC}")
+        
         try:
             subprocess.run(
-                [sys.executable, '-m', 'venv', str(venv_path)],
+                [python_cmd, '-m', 'venv', str(venv_path)],
                 check=True,
                 cwd=repo_root
             )
@@ -216,6 +244,7 @@ def setup_virtual_environment(venv_path: Path, repo_root: Path) -> bool:
         except subprocess.CalledProcessError as e:
             print(f"{Colors.RED}❌ Error: Failed to create virtual environment{Colors.NC}")
             return False
+    
     venv_python = get_venv_python(venv_path)
     if not venv_python.exists():
         print(f"{Colors.RED}❌ Error: Virtual environment is corrupted{Colors.NC}")

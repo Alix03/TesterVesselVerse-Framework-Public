@@ -33,8 +33,7 @@ def show_menu():
     print("  [1] Initial Setup     - First time setup (configure credentials & download)")
     print("  [2] Update Dataset    - Sync latest changes from remote")
     print("  [3] Upload Dataset    - Push changes to the remote storage")
-    print("  [4] Review Uploads    - Download user contributions for review")
-    print("  [5] Exit")
+    print("  [4] Exit")
     print()
 
 
@@ -68,46 +67,7 @@ def initial_owner_setup():
     if not configure_dvc_remotes(config, datasets_dir):
         return False
     
-    """ print(f"{Colors.YELLOW}[3/6] Initializing all datasets...{Colors.NC}")
-    datasets_dir = DATASET_GIT_ROOT / "datasets"
-    if not datasets_dir.exists():
-        print(f"{Colors.RED}❌ Error: Datasets directory not found: {datasets_dir}{Colors.NC}")
-        return False
-
-    all_datasets = sorted([d for d in datasets_dir.glob("D-*") if d.is_dir()])
-    if not all_datasets:
-        print(f"{Colors.RED}❌ No datasets found in {datasets_dir}{Colors.NC}")
-        return False
-
-    print(f"Found {len(all_datasets)} dataset(s):")
-    for dataset in all_datasets:
-        print(f"  • {dataset.name}")
-    print()
-    print("Configuring DVC for each dataset...")
-    print()
-
-    database_id = config.database_ID
-    user_upload_id = config.user_upload_ID
-
-    configure_dvc_remotes(config, datasets_dir) 
-
-    # Step 4: Verify setup
-    print(f"{Colors.YELLOW}[4/6] Verifying setup...{Colors.NC}")
-    configured_count = 0
-    for dataset_path in all_datasets:
-        code, output = run_command(f'"{get_venv_python(VENV_PATH)}" -m dvc remote list', cwd=dataset_path, capture_output=True)
-        if "storage" in output:
-            configured_count += 1
-    if configured_count > 0:
-        print(f"{Colors.GREEN}✅ {configured_count} dataset(s) configured with DVC remotes{Colors.NC}")
-    else:
-        print(f"{Colors.RED}❌ Error: No datasets configured{Colors.NC}")
-        return False
-    print() """
-
-    database_id = config.database_ID
-    user_upload_id = config.user_upload_ID
-
+    
     # Summary
     print(f"{Colors.BLUE}═══════════════════════════════════════════════════{Colors.NC}")
     print(f"{Colors.GREEN}          Owner Setup Complete! 🎉{Colors.NC}")
@@ -115,8 +75,9 @@ def initial_owner_setup():
     print()
     print(f"{Colors.BLUE}Configuration Summary:{Colors.NC}")
     print(f"  Credentials: {Colors.GREEN}{config.user_auth_path.name}{Colors.NC}")
-    print(f"  Storage Remote: {Colors.GREEN}gdrive://{database_id}{Colors.NC}")
-    print(f"  Uploads Remote: {Colors.GREEN}gdrive://{user_upload_id}{Colors.NC}")
+    print(f"  Datasets configured with per-dataset storage IDs")
+    print(f"    • IXI: {Colors.GREEN}{config.get_storage_id('IXI')[:20]}...{Colors.NC}")
+    print(f"    • COW23MR: {Colors.GREEN}{config.get_storage_id('COW23MR')[:20]}...{Colors.NC}")
     print()
     
     return True
@@ -133,6 +94,7 @@ def owner_update_dataset():
 
     # Load config
     config = VesselVerseConfig()
+    venv_python = str(get_venv_python(VENV_PATH))
 
     # Step 1: Select target dataset
     dataset_base = DATASET_GIT_ROOT / 'datasets'
@@ -227,7 +189,7 @@ def owner_update_dataset():
     for dvc_file in dvc_files:
         dvc_name = dvc_file.stem
         print(f"{Colors.CYAN}Pulling: {dvc_name}{Colors.NC}")
-        code, _ = run_command(f'dvc pull "{dvc_file.name}"', cwd=dataset_dir)
+        code, _ = run_command(f'"{venv_python}" -m dvc pull "{dvc_file.name}"', cwd=dataset_dir)
         if code == 0:
             print(f"  {Colors.GREEN}✅ {dvc_name} downloaded{Colors.NC}")
             total_updated += 1
@@ -261,6 +223,7 @@ def owner_upload_dataset():
 
     # Load config
     config = VesselVerseConfig()
+    venv_python = str(get_venv_python(VENV_PATH))
     
     # Step 1: Select target dataset
     dataset_base = DATASET_GIT_ROOT / 'datasets'
@@ -370,7 +333,7 @@ def owner_upload_dataset():
     for folder in selected_folders:
         print(f"{Colors.CYAN}Processing: {folder}{Colors.NC}")
         print(f"  Running: dvc add {folder}")
-        code, _ = run_command(f'dvc add "{folder}"', cwd=dataset_dir)
+        code, _ = run_command(f'\"{venv_python}\" -m dvc add \"{folder}\"', cwd=dataset_dir)
         if code == 0:
             print(f"  {Colors.GREEN}✅ Added {folder} to DVC{Colors.NC}")
             tracked_folders.append(folder)
@@ -447,7 +410,7 @@ def owner_upload_dataset():
         dvc_file = data_dir / f'{folder}.dvc'
         if dvc_file.exists():
             print(f"{Colors.CYAN}Pushing: {folder}{Colors.NC}")
-            code, _ = run_command(f'dvc push "{dvc_file.name}"', cwd=dataset_dir)
+            code, _ = run_command(f'\"{venv_python}\" -m dvc push \"{dvc_file.name}\"', cwd=dataset_dir)
             if code != 0:
                 print(f"  {Colors.RED}❌ Failed to push {folder}{Colors.NC}")
                 push_failed = True
@@ -526,120 +489,6 @@ def owner_upload_dataset():
     return True
 
 
-######## Function 4: Review User Uploads
-
-def owner_review_user_uploads():
-    """Review user uploads - download from uploads remote"""
-    print(f"{Colors.BLUE}═══════════════════════════════════════════════════{Colors.NC}")
-    print(f"{Colors.BLUE}   Review User Uploads - Owner Mode                {Colors.NC}")
-    print(f"{Colors.BLUE}═══════════════════════════════════════════════════{Colors.NC}")
-    print()
-
-
-    # Load config
-    config = VesselVerseConfig()
-
-    # Step 0: Select dataset for review
-    datasets_dir = DATASET_GIT_ROOT / "datasets"
-    available_datasets = sorted([d.name for d in datasets_dir.glob('D-*') if d.is_dir()])
-    if not available_datasets:
-        print(f"{Colors.RED}❌ No datasets found in {datasets_dir}{Colors.NC}")
-        return False
-    print("Available datasets for review:")
-    for i, dataset in enumerate(available_datasets):
-        print(f"  [{i}] {dataset}")
-    print()
-    choice = input("Select dataset: ").strip()
-    try:
-        idx = int(choice)
-        if 0 <= idx < len(available_datasets):
-            selected_dataset = available_datasets[idx]
-        else:
-            print(f"{Colors.RED}❌ Invalid selection{Colors.NC}")
-            return False
-    except ValueError:
-        print(f"{Colors.RED}❌ Invalid input{Colors.NC}")
-        return False
-    print(f"{Colors.GREEN}Target dataset: {selected_dataset}{Colors.NC}")
-    print()
-
-    dataset_dir = datasets_dir / selected_dataset
-
-    # Update the ID storage based on the selected dataset
-    dataset_name = selected_dataset.replace('D-', '')
-    storage_id = config.get_storage_id(dataset_name)
-    run_command(f'dvc remote modify uploads url gdrive://{storage_id}', cwd=dataset_dir)
-
-    # Check DVC config in selected dataset
-    code, output = run_command('dvc remote list', cwd=dataset_dir, capture_output=True)
-    if 'uploads' not in output:
-        print(f"{Colors.RED}❌ Error: Uploads remote not configured in {selected_dataset}{Colors.NC}")
-        print("Run option [1] Initial Setup first")
-        return False
-
-    user_upload_id = config.user_upload_ID
-
-    print(f"{Colors.YELLOW}ℹ️  Review Information{Colors.NC}")
-    print(f"  This will download data that users have uploaded to the shared folder.")
-    print(f"  Download source: {Colors.CYAN}uploads (gdrive://{user_upload_id}){Colors.NC}")
-    print()
-
-    # Step 1: Update Git
-    print(f"{Colors.YELLOW}[1/3] Updating Git repository (to get .dvc pointer files)...{Colors.NC}")
-    code, _ = run_command('git pull', cwd=dataset_dir)
-    if code == 0:
-        print(f"{Colors.GREEN}✅ Git repository updated{Colors.NC}")
-    else:
-        print(f"{Colors.YELLOW}⚠️  Git pull had issues, continuing anyway...{Colors.NC}")
-    print()
-
-    # Step 2: Restore deleted .dvc files
-    print(f"{Colors.YELLOW}[2/3] Restoring .dvc files if needed...{Colors.NC}")
-    code, output = run_command('git status --short', cwd=dataset_dir, capture_output=True)
-    deleted_dvc = output.count('.dvc')
-    if deleted_dvc > 0:
-        print(f"  Restoring {deleted_dvc} deleted .dvc file(s)...")
-        run_command('git restore *.dvc', cwd=dataset_dir)
-        print(f"{Colors.GREEN}✅ .dvc files restored{Colors.NC}")
-    else:
-        print(f"{Colors.GREEN}✅ All .dvc files present{Colors.NC}")
-    dvc_count = len(list(dataset_dir.glob('*.dvc')))
-    print(f"  Found {dvc_count} tracked item(s)")
-    print()
-
-    # Step 3: Pull from uploads remote
-    print(f"{Colors.YELLOW}[3/3] Downloading from user uploads remote...{Colors.NC}")
-    print(f"Pulling from remote: {Colors.CYAN}uploads (gdrive://{user_upload_id}){Colors.NC}")
-    print("This may take a while depending on data size...")
-    print()
-    code, _ = run_command('dvc pull -r uploads', cwd=dataset_dir)
-    print()
-
-    # Summary
-    data_dir = dataset_dir
-    print(f"{Colors.BLUE}═══════════════════════════════════════════════════{Colors.NC}")
-    if code == 0:
-        print(f"{Colors.GREEN}          Download Complete! 🎉{Colors.NC}")
-    else:
-        print(f"{Colors.YELLOW}          Download Finished{Colors.NC}")
-        print(f"{Colors.YELLOW}  (Some files may only exist in main storage, not uploads){Colors.NC}")
-    print(f"{Colors.BLUE}═══════════════════════════════════════════════════{Colors.NC}")
-    print()
-    print(f"{Colors.BLUE}Review Summary:{Colors.NC}")
-    print(f"  Source Remote:     {Colors.CYAN}uploads (gdrive://{user_upload_id}){Colors.NC}")
-    print(f"  Destination:       {Colors.GREEN}{data_dir}{Colors.NC}")
-    print()
-    print(f"{Colors.YELLOW}ℹ️  Note:{Colors.NC}")
-    print(f"  Only files that users uploaded to 'uploads' remote will be downloaded.")
-    print(f"  Files that only exist in main 'storage' will show as errors (this is normal).")
-    print()
-    print(f"{Colors.YELLOW}ℹ️  Next steps:{Colors.NC}")
-    print(f"  • Review the downloaded data in {data_dir}")
-    print(f"  • If approved, use option [3] Upload Dataset to push to main storage")
-    print()
-    return True
-
-
 ######## Main Menu
 
 def owner_main():
@@ -655,7 +504,7 @@ def owner_main():
         print()
         show_menu()
         
-        choice = input("Enter your choice [1-5]: ").strip()
+        choice = input("Enter your choice [1-4]: ").strip()
         
         if choice == '1':
             initial_owner_setup()
@@ -664,12 +513,10 @@ def owner_main():
         elif choice == '3':
             owner_upload_dataset()
         elif choice == '4':
-            owner_review_user_uploads()
-        elif choice == '5':
             print(f"{Colors.BLUE}Goodbye!{Colors.NC}")
             sys.exit(0)
         else:
-            print(f"{Colors.RED}Invalid option. Please select 1-5{Colors.NC}")
+            print(f"{Colors.RED}Invalid option. Please select 1-4{Colors.NC}")
         
         print()
         input("Press Enter to continue...")

@@ -17,6 +17,23 @@ import json
 
 class VesselVerseConfig:
     """Configuration class for VesselVerse project"""
+
+    def set_storage_id(self, dataset_name, storage_id, save=True, is_upload=False):
+        """
+        Set or update the Google Drive storage or upload ID for a dataset and optionally save config.
+        Args:
+            dataset_name: Name of dataset (e.g., 'Expert')
+            storage_id: Google Drive folder ID
+            save: If True, save config to file
+            is_upload: If True, set as UPLOAD_ID instead of STORAGE_ID
+        """
+        if is_upload:
+            attr_name = f"{dataset_name}_UPLOAD_ID"
+        else:
+            attr_name = f"{dataset_name}_STORAGE_ID"
+        setattr(self, attr_name, storage_id)
+        if save:
+            self.save_json()
     
     def __init__(self, config_file=None):
         """
@@ -48,15 +65,13 @@ class VesselVerseConfig:
         self.VENV_ROOT = self.DATASET_GIT_ROOT
         self.VENV_PATH = self.VENV_ROOT / ".venv"
         
-        # Google Drive folder IDs
-        self.database_ID = '1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi'
-        self.user_upload_ID = '1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi'
-        
-        # Testing ID (temporary - used for all datasets during development)
+        # Testing ID (fallback for unconfigured datasets)
         self.TESTING_ID = '1qzVGvHThjVuZ9n7k1jNOBjOa2wPM4LZi'
         
         # Dataset storage mapping
-        self._setup_dataset_storage()
+        self._setup_dataset_storage()        
+        # Load overrides from config.json if it exists
+        self._load_from_json()
         
     def _detect_slicer_path(self):
         """Auto-detect 3D Slicer installation path based on OS"""
@@ -85,35 +100,44 @@ class VesselVerseConfig:
             self.SLICER_PATH = Path.home() / "Slicer" / "Slicer"
     
     def _setup_dataset_storage(self):
-        """Setup storage IDs for all datasets"""
-        # IXI Dataset
-        self.IXI_STORAGE_ID = self.TESTING_ID
-        # Production IDs (commented for future use):
-        # self.IXI_STORAGE_ID = '1Lt5rGwBPkmdXGeGmpNKrzZ07xJzY_yYv'
-        # IXI_UPLOAD_IDS: 
-        #   BravePanda='1OzAuvCBUkH2Lt4HOBxmEPmdYR1H88C-Y'
-        #   SwiftCheetah='1PoD3eV41h_EWb1uDuMNGlfIUg8gi5_8a'
-        #   SilentOwl='1dgXeYwaOxKeS1NGJSBCzatk8l1Qwmh8q'
+        """Setup storage IDs for all datasets (default only, D-Expert handled dynamically)"""
+        # IXI Dataset - Production ID
+        if not hasattr(self, 'IXI_STORAGE_ID'):
+            self.IXI_STORAGE_ID = '1Lt5rGwBPkmdXGeGmpNKrzZ07xJzY_yYv'
         
-        # COW23MR Dataset
-        self.COW23MR_STORAGE_ID = self.TESTING_ID
-        # Production IDs (commented for future use):
-        # self.COW23MR_STORAGE_ID = '1jBDBZb8MNNXpGGWe0nTeOLlK_KIIW60p'
-        # COW23MR_UPLOAD_IDS:
-        #   BravePanda='1HaOSkx8ANp9S-mzSh-XJ56ZapTBsHCDX'
-        #   SwiftCheetah='1mdgCXcgNuLtP6YkCNyWbkNCbPiG0AHzZ'
-        #   SilentOwl='1ObMn6yrPPnw4Ua8OYFt34ct7lcakK1OU'
+        # COW23MR Dataset - Production ID
+        if not hasattr(self, 'COW23MR_STORAGE_ID'):
+            self.COW23MR_STORAGE_ID = '1jBDBZb8MNNXpGGWe0nTeOLlK_KIIW60p'
         
         # ITKTubeTK Dataset
-        self.ITKTubeTK_STORAGE_ID = self.TESTING_ID
+        if not hasattr(self, 'ITKTubeTK_STORAGE_ID'):
+            self.ITKTubeTK_STORAGE_ID = self.TESTING_ID
         
-        # Prova Dataset
-        self.Prova_STORAGE_ID = self.TESTING_ID
-        self.Prova_UPLOAD_ID = self.TESTING_ID
+        # Expert Dataset: managed dynamically via set_storage_id and config.json!
+        # The ID is entered by the user during setup
         
-        # Prova2 Dataset
-        self.Prova2_STORAGE_ID = self.TESTING_ID
-        self.Prova2_UPLOAD_ID = self.TESTING_ID
+        # Prova Dataset (testing)
+        if not hasattr(self, 'Prova_STORAGE_ID'):
+            self.Prova_STORAGE_ID = self.TESTING_ID
+        
+        # Prova2 Dataset (testing)
+        if not hasattr(self, 'Prova2_STORAGE_ID'):
+            self.Prova2_STORAGE_ID = self.TESTING_ID
+
+    def _load_from_json(self):
+        """Load configuration overrides from config.json if it exists"""
+        config_path = self.REPO_ROOT / "config.json"
+        if config_path.exists():
+            try:
+                with open(config_path, 'r') as f:
+                    data = json.load(f)
+                # Load only *_STORAGE_ID and *_UPLOAD_ID fields
+                for key, value in data.items():
+                    if key.endswith('_STORAGE_ID') or key.endswith('_UPLOAD_ID'):
+                        setattr(self, key, value)
+            except Exception as e:
+                # Silently continue if config.json is corrupted or missing
+                pass
     
     def get_dataset_path(self, dataset_name):
         """
@@ -140,9 +164,20 @@ class VesselVerseConfig:
         attr_name = f"{dataset_name}_STORAGE_ID"
         return getattr(self, attr_name, self.TESTING_ID)
     
+    def get_upload_id(self, dataset_name):
+        """
+        Get Google Drive upload ID for a dataset (used for D-Expert uploads remote).
+        Args:
+            dataset_name: Name of dataset (e.g., 'Expert')
+        Returns:
+            Upload folder ID string
+        """
+        attr_name = f"{dataset_name}_UPLOAD_ID"
+        return getattr(self, attr_name, None)
+    
     def to_dict(self):
         """Export configuration as dictionary"""
-        return {
+        result = {
             'REPO_ROOT': str(self.REPO_ROOT),
             'SLICER_PATH': str(self.SLICER_PATH),
             'DATASET_NAME': self.DATASET_NAME,
@@ -150,8 +185,6 @@ class VesselVerseConfig:
             'VENV_PATH': str(self.VENV_PATH),
             'owner_auth_path': str(self.owner_auth_path),
             'user_auth_path': str(self.user_auth_path),
-            'database_ID': self.database_ID,
-            'user_upload_ID': self.user_upload_ID,
             'TESTING_ID': self.TESTING_ID,
             'IXI_STORAGE_ID': self.IXI_STORAGE_ID,
             'COW23MR_STORAGE_ID': self.COW23MR_STORAGE_ID,
@@ -159,6 +192,12 @@ class VesselVerseConfig:
             'Prova_STORAGE_ID': self.Prova_STORAGE_ID,
             'Prova2_STORAGE_ID': self.Prova2_STORAGE_ID
         }
+        # Add all dynamically set IDs (STORAGE_ID and UPLOAD_ID)
+        for attr_name in dir(self):
+            if (attr_name.endswith('_STORAGE_ID') or attr_name.endswith('_UPLOAD_ID')) and not attr_name.startswith('_'):
+                if attr_name not in result:  # Avoid duplicates
+                    result[attr_name] = getattr(self, attr_name)
+        return result
     
     def to_shell_exports(self):
         """
