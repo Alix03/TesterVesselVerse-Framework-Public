@@ -1,193 +1,54 @@
-# VesselVerse Project
+# VesselVerse
 
-VesselVerse is a comprehensive framework for vessel segmentation dataset management and annotation, integrating DVC (Data Version Control), 3D Slicer, and collaborative annotation workflows.
+**VesselVerse** is a collaborative platform for vessel segmentation dataset management, annotation, and reproducible research. It integrates DVC (Data Version Control), 3D Slicer, and automated workflows to simplify data sharing and contribution in medical imaging projects.
 
-## 📁 Project Structure
+---
 
-```
-VesselVerse/
-├── config.sh
-├── vesselverseUser.sh
-├── vesselverseOwner.sh
-├── credentials/
-│
-├── VesselVerse-Framework/
-│   ├── requirements.txt
-│   ├── scripts/
-│   ├── scripts_py/
-│   ├── src/
-│   ├── notebooks/
-│   ├── docs/
-│   └── VESSELVERSE_DATA_IXI/
-│       └── data/
-│           ├── A2V/                  # Artery-to-Vein predictions
-│           ├── ExpertAnnotations/    # Expert manual annotations
-│           ├── ExpertVAL/           # Expert validation set
-│           ├── Filtering/           # Filtered segmentations
-│           ├── IXI_TOT/             # Original IXI images
-│           ├── metadata/            # Dataset metadata
-│           ├── nnUNet/              # nnUNet predictions
-│           ├── STAPLE/              # STAPLE consensus
-│           ├── STAPLE_base/         # STAPLE baseline
-│           └── StochasticAL/        # Stochastic Active Learning
-│
-└── VesselVerse-Dataset/             # Dataset repository with DVC
-    ├── requirements.txt
-    ├── toy_config.sh
-    ├── scripts/
-    └── datasets/                    # Datasets managed in monorepo with independent DVC configs
-        ├── D-COW23MR/              # COW23MR dataset (12 tracked items)
-        │   ├── .dvc/               # Independent DVC configuration
-        │   └── *.dvc               # DVC tracked files
-        ├── D-ITKTubeTK/            # ITKTubeTK dataset
-        │   └── .dvc/
-        ├── D-IXI/                  # IXI dataset (4 tracked items)
-        │   ├── .dvc/
-        │   └── *.dvc
-        └── D-Prova/                # Test dataset (1 tracked item)
-            └── .dvc/
-```
+## 🚀 What is VesselVerse?
 
-## 🎯 Key Components
+- **Unified framework** for managing, annotating, and sharing large medical imaging datasets
+- **Automated scripts** for both users (contributors) and owners (maintainers)
+- **DVC integration** for versioning large files with Google Drive as remote storage
+- **3D Slicer extension** for expert annotation and visualization
+- **Monorepo architecture**: all datasets and tools in a single repository for easy onboarding
 
-### 1. **User/Owner Scripts**
+---
 
-- **vesselverseUser.sh**: User-facing operations (download, upload, switch datasets)
-- **vesselverseOwner.sh**: Owner operations (dataset management, user upload review)
+## 📚 Documentation
 
-### 2. **DVC Integration**
+- **[User Manual](USER_MANUAL.md)**: Step-by-step guide for contributors (downloading, annotating, uploading, submitting data)
+- **[Developer Manual](DEVELOPER_MANUAL.md)**: Technical documentation for maintainers and advanced users (architecture, scripts, configuration, best practices)
+- **[Visualization Parameters Guide](VIZ_PARAMS.md)**: How to save and share 3D Slicer visualization settings
+- **[Framework API Reference](VesselVerse-Framework/docs/viz_params_README.md)**: Advanced usage and customization
 
-Each dataset in `VesselVerse-Dataset/datasets/` has independent DVC configuration:
+---
 
-- Single Git repository for entire project (monorepo architecture)
-- Each dataset maintains separate `.dvc` directory
-- Independent DVC remotes pointing to Google Drive storage
-- Simplified workflow: single `git clone` for complete project setup
+## 🏗️ Project Structure
 
-**Architecture Benefits:**
+- **VesselVerse-Framework/**: Core scripts, 3D Slicer extension, utilities, and documentation
+- **VesselVerse-Dataset/**: All datasets, each with independent DVC configuration
+- **credentials/**: Service account credentials (not tracked in Git)
+- **vesselverseOwner.py / vesselverseUser.py**: Central configuration scripts
+- **config.py / config.sh**: Central configuration files
 
-- No Git submodules required
-- Single repository for all datasets
-- Each dataset has isolated DVC tracking
-- Simpler collaboration and onboarding
+---
 
-### 3. **3D Slicer Extension**
+## ⚡ Quick Start
 
-- Custom VesselVerse extension for annotation
-- Integrated with dataset registry (`model_config.py`)
-- Supports collaborative annotation workflows
+1. **Read the [User Manual](USER_MANUAL.md) or [Developer Manual](DEVELOPER_MANUAL.md)**
+2. **Run the provided scripts** for setup, data download, annotation, and upload
+3. **Use the 3D Slicer extension** for annotation and visualization
+4. **Submit your work** via the automated Pull Request workflow
 
-### 4. **Data Management**
-
-- **VESSELVERSE_DATA_IXI/**: Local data storage for IXI dataset
-- Folder structure tracked in Git (via `.gitkeep`)
-- Data files managed via DVC (not in Git)
-
-## 🚀 Usage
-
-### User Mode
-
-```bash
-bash vesselverseUser.sh
-# Options:
-# [1] Initial setup - Download datasets
-# [2] Update current dataset
-# [3] Upload modifications
-# [4] Switch dataset
-```
-
-### Owner Mode
-
-```bash
-bash vesselverseOwner.sh
-# Options:
-# [1] Owner initial setup
-# [2] Update dataset (incorporate user changes)
-# [3] Review user uploads
-```
-
-### 3D Slicer
-
-```bash
-cd VesselVerse-Framework/scripts
-bash launch_slicer.sh
-```
-
-## 📋 Requirements
-
-- Python 3.12+
-- DVC 3.64+
-- 3D Slicer (for annotation)
-- Google Cloud service account (for DVC remote access)
-
-Install Python dependencies:
-
-```bash
-cd VesselVerse-Framework
-pip install -r requirements.txt
-
-cd ../VesselVerse-Dataset
-pip install -r requirements.txt
-```
-
-## 🔑 Authentication
-
-Google Cloud service account credentials are stored in `credentials/`:
-
-- Used for DVC remote access to Google Drive
-- Configure via `GOOGLE_APPLICATION_CREDENTIALS` environment variable
-
-## 📝 Configuration
-
-Main configuration in `config.sh`:
-
-- Dataset paths
-- Google Drive folder IDs
-- Active dataset selection
-- Credentials selection
+---
 
 ## 🤝 Contributing
 
-1. Use `vesselverseUser.sh` to download and work on datasets
-2. Make annotations using 3D Slicer extension
-3. Upload modifications via script option [3]
-4. Owner reviews and incorporates changes
-
-## 📄 License
-
-See individual LICENSE files in Framework and Dataset directories.
+- Fork the repository and follow the [User Manual](USER_MANUAL.md) for setup
+- Use the provided scripts and 3D Slicer extension for your workflow
+- Submit your contributions via Pull Request
+- See the [Developer Manual](DEVELOPER_MANUAL.md) for advanced development and maintenance
 
 ---
 
-## 🔄 Recent Updates
-
-### Monorepo Architecture (January 2026)
-
-The project was converted from individual Git repositories per dataset to a unified monorepo structure:
-
-**Changes:**
-
-- ✅ Removed `.git` directories from individual datasets (D-IXI, D-COW23MR, D-ITKTubeTK, D-Prova)
-- ✅ All datasets now tracked in single main Git repository
-- ✅ Each dataset maintains independent DVC configuration (`.dvc/`)
-- ✅ Simplified `vesselverseUser.sh` and `vesselverseOwner.sh` scripts
-- ✅ DVC initialization now uses `--no-scm` flag (no Git requirement per dataset)
-- ✅ Removed Git submodule logic
-
-**Benefits:**
-
-- Single `git clone` for complete project setup
-- Simplified collaboration workflow
-- No submodule complexity
-- DVC functionality unchanged (pull/push work identically)
-- Easier onboarding for new contributors
-
-**Migration:**
-
-- Git history backed up in `.backup_git_datasets/`
-- All DVC remotes maintained
-- Zero downtime for data operations
-
----
-
-**VesselVerse** - Collaborative Medical Image Segmentation Platform
+For more details, see the full documentation linked above.

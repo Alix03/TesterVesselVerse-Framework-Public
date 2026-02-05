@@ -224,6 +224,8 @@ This manual provides technical details for developers working on the VesselVerse
 - **Available Colors**: BLUE, CYAN, GREEN, YELLOW, RED, NC (no color)
 - **Use Case**: Provides colored, user-friendly console output
 
+## 3. Configuration Management
+
 ### config.py
 
 **Purpose**: Central configuration management for VesselVerse project.
@@ -383,15 +385,51 @@ When run as script (`python3 config.py`), provides commands:
 
 ### User (Contributor) Workflow
 
-1. **Fork Repository**
-   - Fork VesselVerse repository on GitHub
-   - Clone your fork locally
+1. **Create Workspace and Fork Both Repositories**
+   - Create a parent folder for the project: `mkdir vesselverse && cd vesselverse`
+   - Fork **VesselVerse-Framework** on GitHub: https://github.com/i-vesseg/VesselVerse-Framework
+   - Fork **VesselVerse-Dataset** on GitHub: https://github.com/i-vesseg/VesselVerse-Dataset
+   - Clone **both** of your forks into the parent folder
 
-2. **Initial Setup**
+2. **Clone Your Forks**
 
    ```bash
+   # Inside vesselverse/ parent folder
+
+   # Clone Dataset repository (your fork)
+   git clone https://github.com/YourUsername/VesselVerse-Dataset.git
+
+   # Clone Framework repository (your fork)
    git clone https://github.com/YourUsername/VesselVerse-Framework.git
+
+   # Your structure should be:
+   # vesselverse/
+   # ├── vesselverseUser.py
+   # ├── vv_utils.py
+   # ├── config.py
+   # ├── credentials/
+   # ├── VesselVerse-Dataset/
+   # └── VesselVerse-Framework/
+   ```
+
+3. **Configure Upstream Remotes (Recommended)**
+
+   ```bash
+   # Configure Dataset upstream
+   cd VesselVerse-Dataset
+   git remote add upstream https://github.com/i-vesseg/VesselVerse-Dataset.git
+   cd ..
+
+   # Configure Framework upstream
    cd VesselVerse-Framework
+   git remote add upstream https://github.com/i-vesseg/VesselVerse-Framework.git
+   cd ..
+   ```
+
+4. **Initial Setup**
+
+   ```bash
+   # Run from parent vesselverse/ folder
    python3 vesselverseUser.py
    # Choose [1] Initial Setup
    # - Select user credentials
@@ -399,51 +437,48 @@ When run as script (`python3 config.py`), provides commands:
    # - Enter your personal Google Drive ID
    ```
 
-3. **Configure Upstream (Recommended)**
+5. **Download Approved Datasets**
 
    ```bash
-   cd VesselVerse-Dataset
-   git remote add upstream https://github.com/Alix03/VesselVerse-Framework.git
-   ```
-
-4. **Download Approved Datasets**
-
-   ```bash
+   python3 vesselverseUser.py
    # Choose [2] Update Dataset
    # - Select datasets to download
    # - Downloads from official storage
    ```
 
-5. **Work on Annotations**
+6. **Work on Annotations**
    - Create folders in D-Expert (e.g., MyAnnotations/)
    - Add your segmentation files
    - Test and validate your work
 
-6. **Upload Your Work**
+7. **Upload Your Work**
 
    ```bash
+   python3 vesselverseUser.py
    # Choose [3] Upload Data
    # - Tracks folders with DVC
    # - Uploads to your personal Google Drive
    # - Commits .dvc files to Git
    ```
 
-7. **Submit for Review**
+8. **Submit for Review**
 
    ```bash
+   python3 vesselverseUser.py
    # Choose [4] Create Pull Request
    # - Creates timestamped branch
    # - Pushes to your fork
    # - Creates PR to original repository
    ```
 
-8. **Keep Fork Updated**
+9. **Keep Fork Updated**
    ```bash
    cd VesselVerse-Dataset
    git fetch upstream
    git checkout main
    git merge upstream/main
    git push origin main
+   cd ..
    ```
 
 ---
@@ -519,9 +554,7 @@ VesselVerse/
 ├── config.sh                          # Legacy shell configuration (deprecated)
 ├── config.json                        # User-specific config (git-ignored)
 ├── vesselverseOwner.py               # Owner CLI interface
-├── vesselverseOwner.sh               # Owner shell wrapper
 ├── vesselverseUser.py                # User/Contributor CLI interface
-├── vesselverseUser.sh                # User shell wrapper
 ├── vv_utils.py                       # Shared utility functions
 ├── .gitignore                        # Git ignore rules
 ├── README.md                         # Main project documentation
@@ -637,7 +670,7 @@ VesselVerse/
 **Owner Upload**:
 
 ```
-Local Data → dvc add → .dvc file → git commit → dvc push → Google Drive
+Local Data → dvc add → .dvc file → git commit → dvc push (uploads) → Google Drive
                                         ↓
                                     git push → GitHub
 ```
@@ -645,15 +678,23 @@ Local Data → dvc add → .dvc file → git commit → dvc push → Google Driv
 **User Download**:
 
 ```
-GitHub → git pull → .dvc files → dvc pull → Google Drive → Local Data
+GitHub --[git pull]--> .dvc files (metadata pointers)
+                           ↓
+                   dvc pull (reads .dvc)
+                           ↓
+              Google Drive (remote storage)
+                           ↓
+                  downloads actual data
+                           ↓
+                    Local Data (files)
 ```
 
 **User Contribution**:
 
 ```
-D-Expert Work → dvc add → .dvc file → dvc push → User's Google Drive
+D-Expert Work → dvc add → .dvc file → dvc push (uploads) → User's Google Drive
                                           ↓
-                                      git commit → git push → Fork
+                                      git commit → git push → Fork (with .dvc metadata)
                                           ↓
                                     Create PR → Review → Merge
 ```

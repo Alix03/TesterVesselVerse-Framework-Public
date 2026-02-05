@@ -1,72 +1,69 @@
-# 🎯 GUIDA RAPIDA: Sistema Parametri Visualizzazione
+# 🎯 QUICK GUIDE: Visualization Parameters System
 
-## ✅ COSA È STATO IMPLEMENTATO
+## ✅ WHAT HAS BEEN IMPLEMENTED
 
-Sistema completo per salvare/caricare parametri visualizzazione 3D Slicer in formato JSON leggero (~2-5 KB invece di .mrml ~100+ KB).
+Complete system to save/load 3D Slicer visualization parameters in lightweight JSON format (~2-5 KB instead of .mrml ~100+ KB).
 
-### File Creati:
+### Created Files:
 
-1. **Directory struttura**:
+1. **Directory structure**:
+   - `D-Prova/viz_params/` - Directory for JSON parameters
+   - `D-Prova/viz_params/schema.json` - JSON validation schema
 
-   - `D-Prova/viz_params/` - Directory per parametri JSON
-   - `D-Prova/viz_params/schema.json` - Schema JSON validazione
+2. **Standalone Python scripts**:
+   - `scripts_py/viz_params_manager.py` - Manager for saving/loading parameters
+   - `scripts_py/autoload_viz_params.py` - Automatic auto-load hook
+   - `scripts_py/autocommit_viz_params.py` - Auto-commit Git script
 
-2. **Script Python standalone**:
-
-   - `scripts_py/viz_params_manager.py` - Manager save/load parametri
-   - `scripts_py/autoload_viz_params.py` - Hook auto-load automatico
-   - `scripts_py/autocommit_viz_params.py` - Script auto-commit Git
-
-3. **Slicer Module con UI**:
-
+3. **Slicer Module with UI**:
    - `src/slicer_extension/VesselVerseVizParams/VesselVerseVizParams.py`
-   - Pannello con bottoni Save/Load
+   - Panel with Save/Load buttons
    - Auto-detect dataset path
-   - Integrazione Git
+   - Git integration
 
-4. **Documentazione**:
-   - `docs/viz_params_README.md` - Guida completa
+4. **Documentation**:
+   - `docs/viz_params_README.md` - Complete guide
 
 ---
 
-## 📝 PASSAGGI PER USARE IL SISTEMA
+## 📝 STEPS TO USE THE SYSTEM
 
-### STEP 1: Preparare Dataset
+### STEP 1: Prepare Dataset
 
-Ogni dataset deve avere una directory `viz_params/`:
+Each dataset must have a `viz_params/` directory:
 
 ```bash
 cd /Users/aliceboccadifuoco/Desktop/VesselVerse/VesselVerse-Dataset/datasets
 
-# Crea viz_params in altri dataset
+# Create viz_params in other datasets
 mkdir -p D-IXI/viz_params
 mkdir -p D-COW23MR/viz_params
 cp D-Prova/viz_params/schema.json D-IXI/viz_params/
 cp D-Prova/viz_params/schema.json D-COW23MR/viz_params/
 ```
 
-### STEP 2: Caricare Modulo VesselVerseVizParams
+### STEP 2: Load VesselVerseVizParams Module
 
-#### Opzione A - Developer Mode (manuale -> ogni volta che apri Slicer)
+#### Option A - Developer Mode (manual -> every time you open Slicer)
 
 In 3D Slicer, Python Console:
 
 ```python
-# Aggiungi path al modulo
+# Add path to module
 import sys
 framework_path = '/Users/aliceboccadifuoco/Desktop/VesselVerse/VesselVerse-Framework'
 sys.path.insert(0, framework_path + '/src/slicer_extension')
 sys.path.insert(0, framework_path + '/scripts_py')
 
-# Registra il modulo nel menu
+# Register module in menu
 factory = slicer.app.moduleManager().factoryManager()
 factory.registerModule(qt.QFileInfo(framework_path + '/src/slicer_extension/VesselVerseVizParams/VesselVerseVizParams.py'))
 factory.loadModules(['VesselVerseVizParams'])
 
-# Apri il modulo
+# Open module
 slicer.util.selectModule('VesselVerseVizParams')
 
-# Ricarica modulo
+# Reload module
 import importlib
 import sys
 sys.path.insert(0, '/Users/aliceboccadifuoco/Desktop/VesselVerse/VesselVerse-Framework/scripts_py')
@@ -74,28 +71,28 @@ import autocommit_viz_params
 importlib.reload(autocommit_viz_params)
 ```
 
-Dopo questi comandi, il modulo appare nel menu Modules e il pannello con i bottoni si apre automaticamente.
+After these commands, the module appears in the Modules menu and the panel with buttons opens automatically.
 
-#### Opzione B - Installazione Permanente (una volta sola)
+#### Option B - Permanent Installation (one time only)
 
-Copia il modulo nella directory Extensions di Slicer:
+Copy the module to Slicer's Extensions directory:
 
 ```bash
-# Trova directory modules di Slicer (macOS)
+# Find Slicer modules directory (macOS)
 SLICER_MODULES=~/Library/Application\ Support/NA-MIC/Slicer\ 5.8/Extensions-*/lib/Slicer-*/qt-scripted-modules/
 
-# Crea symlink
+# Create symlink
 ln -s /Users/aliceboccadifuoco/Desktop/VesselVerse/VesselVerse-Framework/src/slicer_extension/VesselVerseVizParams \
       "$SLICER_MODULES/"
 
-# Riavvia Slicer → il modulo appare automaticamente in Modules menu
+# Restart Slicer → module appears automatically in Modules menu
 ```
 
-Dopo questa installazione, il modulo è sempre disponibile senza eseguire script.
+After this installation, the module is always available without running scripts.
 
-## 🔍 VERIFICA FUNZIONAMENTO
+## 🔍 VERIFY FUNCTIONALITY
 
-### Test 1: Salvare Parametri
+### Test 1: Save Parameters
 
 ```python
 # In Slicer Python Console
@@ -103,7 +100,7 @@ import sys
 sys.path.append('/Users/aliceboccadifuoco/Desktop/VesselVerse/VesselVerse-Framework/scripts_py')
 from viz_params_manager import VizParamsManager
 
-# Crea volume test
+# Create test volume
 import numpy as np
 imageSize = [128, 128, 128]
 voxelType = vtk.VTK_UNSIGNED_CHAR
@@ -115,7 +112,7 @@ volume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode", "TestVolu
 volume.SetAndObserveImageData(imageData)
 volume.CreateDefaultDisplayNodes()
 
-# Salva
+# Save
 manager = VizParamsManager()
 success = manager.save_params(
     volume,
@@ -123,14 +120,14 @@ success = manager.save_params(
 )
 print(f"Save success: {success}")
 
-# Verifica file
+# Verify file
 import json
 with open('/tmp/test_viz.json') as f:
     params = json.load(f)
 print(f"Parameters saved: {list(params.keys())}")
 ```
 
-### Test 2: Caricare Parametri
+### Test 2: Load Parameters
 
 ```python
 # Load parametri salvati
@@ -146,18 +143,18 @@ print(f"Load success: {success}")
 ```bash
 cd /Users/aliceboccadifuoco/Desktop/VesselVerse/VesselVerse-Framework/scripts_py
 
-# Test senza push
+# Test without push
 python3 autocommit_viz_params.py /Users/aliceboccadifuoco/Desktop/VesselVerse/VesselVerse-Dataset/datasets/D-Prova
 
-# Test con push
+# Test with push
 python3 autocommit_viz_params.py /Users/aliceboccadifuoco/Desktop/VesselVerse/VesselVerse-Dataset/datasets/D-Prova --push
 ```
 
 ---
 
-## 📦 STRUTTURA FILE JSON
+## 📦 JSON FILE STRUCTURE
 
-Esempio `IXI001_MRA_viz.json`:
+Example `IXI001_MRA_viz.json`:
 
 ```json
 {
@@ -200,51 +197,51 @@ Esempio `IXI001_MRA_viz.json`:
   "segmentation_opacity": {
     "vessels": 0.8
   },
-  "notes": "Ottimizzato per visualizzazione vasi MRA"
+  "notes": "Optimized for MRA vessel visualization"
 }
 ```
 
-### Parametri Salvati:
+### Saved Parameters:
 
-**Metadati**:
+**Metadata**:
 
-- `volume` - Nome del volume
-- `timestamp` - Data/ora salvataggio (ISO 8601)
-- `slicer_version` - Versione 3D Slicer
-- `schema_version` - Versione schema JSON
+- `volume` - Volume name
+- `timestamp` - Save date/time (ISO 8601)
+- `slicer_version` - 3D Slicer version
+- `schema_version` - JSON schema version
 
-**Visualizzazione Volume**:
+**Volume Display**:
 
-- `window_level.window` - Ampiezza finestra intensità
-- `window_level.level` - Centro finestra intensità
-- `color_map` - Mappa colori (Grey/Viridis/Rainbow/etc.)
-- `opacity_transfer` - Array `[intensità, opacità]` per transfer function
-- `gradient_opacity` - Transfer function gradiente (volume rendering)
-- `rendering_mode` - Metodo rendering (VR_GPU_Ray_Casting/MIP/MinIP/etc.)
+- `window_level.window` - Intensity window width
+- `window_level.level` - Intensity window center
+- `color_map` - Color map (Grey/Viridis/Rainbow/etc.)
+- `opacity_transfer` - Array `[intensity, opacity]` for transfer function
+- `gradient_opacity` - Gradient transfer function (volume rendering)
+- `rendering_mode` - Rendering method (VR_GPU_Ray_Casting/MIP/MinIP/etc.)
 
-**Camera 3D**:
+**3D Camera**:
 
-- `camera.position` - Posizione camera [x, y, z]
-- `camera.focal_point` - Punto di mira [x, y, z]
-- `camera.view_up` - Vettore "su" [x, y, z]
-- `camera.view_angle` - Angolo campo visivo (gradi)
+- `camera.position` - Camera position [x, y, z]
+- `camera.focal_point` - Focal point [x, y, z]
+- `camera.view_up` - "Up" vector [x, y, z]
+- `camera.view_angle` - Field of view angle (degrees)
 
-**Viste Slice**:
+**Slice Views**:
 
-- `slice_views.red` - Offset vista assiale (mm)
-- `slice_views.yellow` - Offset vista sagittale (mm)
-- `slice_views.green` - Offset vista coronale (mm)
+- `slice_views.red` - Axial view offset (mm)
+- `slice_views.yellow` - Sagittal view offset (mm)
+- `slice_views.green` - Coronal view offset (mm)
 
-**Segmentazione** (opzionale):
+**Segmentation** (optional):
 
-- `segmentation_visibility` - Visibilità per ogni segmento
-- `segmentation_opacity` - Opacità per ogni segmento (0.0-1.0)
+- `segmentation_visibility` - Visibility for each segment
+- `segmentation_opacity` - Opacity for each segment (0.0-1.0)
 
-**Note** (opzionale):
+**Notes** (optional):
 
-- `notes` - Note descrittive dell'owner
+- `notes` - Owner's descriptive notes
 
-### Parametri Futuri Possibili:
+### Possible Future Parameters:
 
 ```json
 {
@@ -256,33 +253,33 @@ Esempio `IXI001_MRA_viz.json`:
 }
 ```
 
-**Dimensione tipica**: 2-5 KB (vs .mrml 100-500 KB)
+**Typical size**: 2-5 KB (vs .mrml 100-500 KB)
 
 ---
 
-## 🚀 VANTAGGI SOLUZIONE
+## 🚀 SOLUTION BENEFITS
 
 ### Owner:
 
-- ✅ **1 click per salvare** (bottone UI o script)
-- ✅ **Auto-commit opzionale** (checkbox o script automatico)
-- ✅ **Naming automatico** (`{volume}_viz.json`)
-- ✅ **Git-friendly** (file leggeri, merge semplici)
+- ✅ **1 click to save** (UI button or script)
+- ✅ **Optional auto-commit** (checkbox or automatic script)
+- ✅ **Automatic naming** (`{volume}_viz.json`)
+- ✅ **Git-friendly** (lightweight files, simple merges)
 
 ### User:
 
-- ✅ **0 click con auto-load** (hook installato una volta)
-- ✅ **1 click manuale** (bottone "Auto-Load Settings")
-- ✅ **Visualizzazione identica** all'owner
-- ✅ **Nessun setup complesso**
+- ✅ **0 clicks with auto-load** (hook installed once)
+- ✅ **1 manual click** ("Auto-Load Settings" button)
+- ✅ **Identical visualization** to owner
+- ✅ **No complex setup**
 
-### Sistema:
+### System:
 
-- ✅ **Leggero**: 2-5 KB vs 100-500 KB
-- ✅ **Versionabile**: Git (no DVC)
-- ✅ **Scalabile**: funziona con 10 o 1000 volumi
-- ✅ **Cross-platform**: Python puro
-- ✅ **Estensibile**: facile aggiungere parametri
+- ✅ **Lightweight**: 2-5 KB vs 100-500 KB
+- ✅ **Version-controllable**: Git (no DVC)
+- ✅ **Scalable**: works with 10 or 1000 volumes
+- ✅ **Cross-platform**: Pure Python
+- ✅ **Extensible**: easy to add parameters
 
 ---
 
@@ -291,57 +288,57 @@ Esempio `IXI001_MRA_viz.json`:
 ### "Cannot import viz_params_manager"
 
 ```python
-# Verifica path
+# Verify path
 import sys
 print(sys.path)
 
-# Aggiungi manualmente
+# Add manually
 sys.path.insert(0, '/Users/aliceboccadifuoco/Desktop/VesselVerse/VesselVerse-Framework/scripts_py')
 ```
 
 ### "Module not found: VesselVerseVizParams"
 
 ```python
-# Verifica che il file esista
+# Verify file exists
 import os
 path = '/Users/aliceboccadifuoco/Desktop/VesselVerse/VesselVerse-Framework/src/slicer_extension/VesselVerseVizParams/VesselVerseVizParams.py'
 print(os.path.exists(path))
 
-# Ricarica modulo
+# Reload module
 slicer.util.reloadScriptedModule('VesselVerseVizParams')
 ```
 
 ### "No parameters found"
 
-- Verifica naming: `volume_name.nii.gz` → `volume_name_viz.json`
-- Controlla che `viz_params/` esista
-- Verifica path dataset corretto
+- Verify naming: `volume_name.nii.gz` → `volume_name_viz.json`
+- Check that `viz_params/` exists
+- Verify correct dataset path
 
-### Auto-load non funziona
+### Auto-load not working
 
-- Verifica che hook sia in `~/.config/NA-MIC/Extensions-*/SlicerStartup/`
-- Riavvia Slicer
-- Controlla console Slicer per errori
-- Verifica framework path in `autoload_viz_params.py` (linea 14)
-
----
-
-## 📚 PROSSIMI PASSI
-
-1. **Testare con dataset reale** (D-IXI, D-COW23MR)
-2. **Creare parametri per volumi esistenti**
-3. **Testare workflow completo owner→user**
-4. **Aggiungere viz_params/ ad altri dataset**
-5. **Documentare best practices per team**
+- Verify hook is in `~/.config/NA-MIC/Extensions-*/SlicerStartup/`
+- Restart Slicer
+- Check Slicer console for errors
+- Verify framework path in `autoload_viz_params.py` (line 14)
 
 ---
 
-## 📞 SUPPORTO
+## 📚 NEXT STEPS
 
-- README completo: `VesselVerse-Framework/docs/viz_params_README.md`
-- Schema JSON: `D-Prova/viz_params/schema.json`
-- Esempi: Vedi test in questa guida
+1. **Test with real dataset** (D-IXI, D-COW23MR)
+2. **Create parameters for existing volumes**
+3. **Test complete owner→user workflow**
+4. **Add viz_params/ to other datasets**
+5. **Document best practices for team**
 
 ---
 
-**✅ Sistema completo e pronto all'uso!**
+## 📞 SUPPORT
+
+- Complete README: `VesselVerse-Framework/docs/viz_params_README.md`
+- JSON Schema: `D-Prova/viz_params/schema.json`
+- Examples: See tests in this guide
+
+---
+
+**✅ System complete and ready to use!**

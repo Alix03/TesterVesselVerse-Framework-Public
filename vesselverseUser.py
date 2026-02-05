@@ -27,9 +27,9 @@ def display_header():
 def print_menu():
     """Display user menu"""
     print(f"{Colors.CYAN}What would you like to do?{Colors.NC}\n")
-    print("  [1] Initial Setup     - First time setup (configure credentials & download)")
-    print("  [2] Update Dataset    - Sync latest changes from remote")
-    print("  [3] Upload Data       - Upload your modifications to the shared folder")
+    print("  [1] Initial Setup       - First time setup (configure credentials & download)")
+    print("  [2] Update Dataset      - Sync latest changes from remote")
+    print("  [3] Upload Dataset      - Upload your modifications to the shared folder")
     print("  [4] Create Pull Request - Request owner review of your D-Expert data")
     print("  [5] Exit\n")
 
@@ -60,22 +60,22 @@ def user_initial_setup():
     expert_dir = datasets_dir / "D-Expert"
     if not expert_dir.exists():
         expert_dir.mkdir(parents=True)
-        print(f"{Colors.GREEN}✅ Cartella personale D-Expert creata: {expert_dir}{Colors.NC}")
+        print(f"{Colors.GREEN}✅ Personal D-Expert folder created: {expert_dir}{Colors.NC}")
     else:
-        print(f"{Colors.YELLOW}ℹ️ Cartella D-Expert già esistente: {expert_dir}{Colors.NC}")
+        print(f"{Colors.YELLOW}ℹ️ D-Expert folder already exists: {expert_dir}{Colors.NC}")
 
     # Ask User for the Google Drive ID for D-Expert
-    print(f"\n{Colors.CYAN}Inserisci l'ID della cartella Google Drive per D-Expert:{Colors.NC}")
-    print(f"{Colors.YELLOW}(Questa cartella verrà usata per upload e download dei tuoi dati){Colors.NC}")
-    print(f"{Colors.YELLOW}L'ID deve essere in formato base64url (25-50 caratteri: a-z, A-Z, 0-9, _, -){Colors.NC}")
+    print(f"\n{Colors.CYAN}Enter the Google Drive ID for D-Expert folder:{Colors.NC}")
+    print(f"{Colors.YELLOW}(This folder will be used for uploading and downloading your data){Colors.NC}")
+    print(f"{Colors.YELLOW}The ID must be in base64url format (25-50 characters: a-z, A-Z, 0-9, _, -){Colors.NC}")
     
     import re
     gdrive_id_pattern = re.compile(r'^[a-zA-Z0-9_-]{25,50}$')
     
     while True:
-        gdrive_id = input("ID GDrive D-Expert: ").strip()
+        gdrive_id = input("GDrive ID D-Expert: ").strip()
         if not gdrive_id:
-            print(f"{Colors.YELLOW}⚠️  No ID inserted for D-Expert. Remote uploads won't be configured.{Colors.NC}")
+            print(f"{Colors.YELLOW}⚠️  No ID entered for D-Expert. Remote uploads won't be configured.{Colors.NC}")
             break
         
         # Validate ID format
@@ -84,15 +84,15 @@ def user_initial_setup():
             # Save ID for both storage and uploads (D-Expert uses same ID for both)
             vv_config.set_storage_id('Expert', gdrive_id, save=False, is_upload=False)
             vv_config.set_storage_id('Expert', gdrive_id, save=True, is_upload=True)
-            print(f"{Colors.GREEN}✅ ID GDrive for D-Expert saved!{Colors.NC}")
+            print(f"{Colors.GREEN}✅ GDrive ID for D-Expert saved!{Colors.NC}")
             # Reload config to include the newly saved IDs
             config = VesselVerseConfig()
             break
         else:
-            print(f"{Colors.RED}❌ ID non valido! Deve essere formato base64url (25-50 caratteri).{Colors.NC}")
-            print(f"{Colors.YELLOW}Esempio: 1Lt5rGwBPkmdXGeGmpNKrzZ07xJzY_yYv{Colors.NC}")
-            retry = input("Vuoi riprovare? [s/n]: ").strip().lower()
-            if retry != 's':
+            print(f"{Colors.RED}❌ Invalid ID! Must be in base64url format (25-50 characters).{Colors.NC}")
+            print(f"{Colors.YELLOW}Example: 1Lt5rGwBPkmdXGeGmpNKrzZ07xJzY_yYv{Colors.NC}")
+            retry = input("Do you want to retry? [y/n]: ").strip().lower()
+            if retry != 'y':
                 print(f"{Colors.YELLOW}⚠️  Setup interrotto. Remote uploads non configurato.{Colors.NC}")
                 break
     

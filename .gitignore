@@ -64,6 +64,9 @@ credentials/*
 *.pem
 *.key
 
+# Configuration (user-specific paths and IDs)
+config.json
+
 # DVC
 .dvc/tmp
 .dvc/cache
