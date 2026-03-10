@@ -22,7 +22,7 @@ Complete system to save/load 3D Slicer visualization parameters in lightweight J
    - Git integration
 
 4. **Documentation**:
-   - `docs/viz_params_README.md` - Complete guide
+   - `VesselVerse-Framework/docs/viz_params_README.md` - Complete guide
 
 ---
 
