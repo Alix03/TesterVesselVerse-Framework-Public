@@ -17,10 +17,11 @@
 ---
 
 ## 📚 Documentation
+All core documentation and presentations are located in the `docs/` folder:
 
-- **[User Manual](USER_MANUAL.md)**: Step-by-step guide for contributors (downloading, annotating, uploading, submitting data)
-- **[Developer Manual](DEVELOPER_MANUAL.md)**: Technical documentation for maintainers and advanced users (architecture, scripts, configuration, best practices)
-- **[Visualization Parameters Guide](VIZ_PARAMS.md)**: How to save and share 3D Slicer visualization settings
+- **[User Manual](./docs/USER_MANUAL.md)**: Step-by-step guide for contributors (downloading, annotating, uploading, submitting data)
+- **[Developer Manual](./docs/DEVELOPER_MANUAL.md)**: Technical documentation for maintainers and advanced users (architecture, scripts, configuration, best practices)
+- **[Visualization Parameters Guide](./docs/VIZ_PARAMS.md)**: How to save and share 3D Slicer visualization settings
 - **[Framework API Reference](VesselVerse-Framework/docs/viz_params_README.md)**: Advanced usage and customization
 
 ---
