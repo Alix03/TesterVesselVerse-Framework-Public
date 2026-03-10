@@ -558,11 +558,13 @@ VesselVerse/
 ├── vv_utils.py                       # Shared utility functions
 ├── .gitignore                        # Git ignore rules
 ├── README.md                         # Main project documentation
-├── USER_MANUAL.md                    # End-user guide
-├── DEVELOPER_MANUAL.md               # This file
-├── VIZ_PARAMS.md                     # Visualization parameters guide
-├── credentials/                      # Service account credentials (git-ignored)
 │
+├── credentials/                      # Service account credentials (git-ignored)
+├── docs/                              # Project documentation and manuals
+│   ├── DEVELOPER_MANUAL.md            # This file
+│   ├── USER_MANUAL.md                 # End-user guide
+│   ├── VIZ_PARAMS.md                  # Visualization parameters guide
+│   └── VesselVerse_Project_Presentation.pdf # Project slides and impact metrics
 ├── VesselVerse-Dataset/              # Data repository submodule
 │   ├── .venv/                       # Python virtual environment (git-ignored)
 │   ├── LICENSE                      # Dataset license
