@@ -10,7 +10,7 @@
 - **Automated scripts** for both users (contributors) and owners (maintainers)
 - **DVC integration** for versioning large files with Google Drive as remote storage
 - **3D Slicer extension** for expert annotation and visualization
-- **Monorepo architecture**: all datasets and tools in a single repository for easy onboarding
+- **Clear Repository Architecture:**: strict separation between the Framework (functions & tools ONLY) and the Dataset (data management ONLY).
 
 ---
 
@@ -48,6 +48,26 @@
 - Use the provided scripts and 3D Slicer extension for your workflow
 - Submit your contributions via Pull Request
 - See the [Developer Manual](DEVELOPER_MANUAL.md) for advanced development and maintenance
+
+---
+
+## 🏆 Impact & Results
+
+[cite_start]Previously, users had to execute over 15 manual commands to set up the environment, leading to a high barrier to entry and confusion between Git and DVC tracking[cite: 30, 44, 45]. By developing automated CLI scripts (`vesselverseOwner.py` and `vesselverseUser.py`), this project achieved:
+
+* [cite_start]**83% Setup Time Reduction:** Decreased initial setup from 30+ minutes to just 5 minutes[cite: 192].
+* [cite_start]**80% Command Reduction:** Streamlined 15+ manual terminal commands into 3 simple menu selections[cite: 192].
+* [cite_start]**Zero Technical Barrier:** Abstracted complex Git, DVC, and Google Drive interactions[cite: 192].
+* [cite_start]**Fully Automated PRs:** Implemented 1-command automated Pull Request creation directly from the terminal[cite: 65, 192].
+* [cite_start]**Significantly Reduced Error Rate:** Replaced manual typing with validated inputs[cite: 192].
+
+---
+
+## 👩‍💻 Author
+
+[cite_start]**Alice Boccadifuoco** 
+* [cite_start]EURECOM - Semester Project (February 2026) 
+* [[Link al tuo profilo LinkedIn](https://it.linkedin.com/in/alice-boccadifuoco-557454217)]
 
 ---
 
