@@ -702,7 +702,7 @@ gh auth login
 
 ## 10. Getting Help
 
-### Documentation
+### Documentation in Docs folder
 
 - **Developer Manual**: Technical details for advanced users
 - **VIZ_PARAMS.md**: Visualization parameter configuration
