@@ -2,6 +2,8 @@
 
 **VesselVerse** is a collaborative platform for vessel segmentation dataset management, annotation, and reproducible research. It integrates DVC (Data Version Control), 3D Slicer, and automated workflows to simplify data sharing and contribution in medical imaging projects.
 
+*A collaborative framework for vessel annotation. [📄 Read the official paper](https://i-vesseg.github.io/vesselverse/paper) | [🌐 Visit the website](https://i-vesseg.github.io/vesselverse).*
+
 ---
 
 ## 🚀 What is VesselVerse?
