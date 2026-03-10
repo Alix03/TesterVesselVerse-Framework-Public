@@ -67,7 +67,7 @@
 
 [cite_start]**Alice Boccadifuoco** 
 * [cite_start]EURECOM - Semester Project (February 2026) 
-* [[Link al tuo profilo LinkedIn](https://it.linkedin.com/in/alice-boccadifuoco-557454217)]
+* [[LinkedIn](https://it.linkedin.com/in/alice-boccadifuoco-557454217)]
 
 ---
 
