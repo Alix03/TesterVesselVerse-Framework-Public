@@ -53,20 +53,20 @@
 
 ## 🏆 Impact & Results
 
-[cite_start]Previously, users had to execute over 15 manual commands to set up the environment, leading to a high barrier to entry and confusion between Git and DVC tracking[cite: 30, 44, 45]. By developing automated CLI scripts (`vesselverseOwner.py` and `vesselverseUser.py`), this project achieved:
+[cite_start]Previously, users had to execute over 15 manual commands to set up the environment, leading to a high barrier to entry and confusion between Git and DVC tracking. By developing automated CLI scripts (`vesselverseOwner.py` and `vesselverseUser.py`), this project achieved:
 
-* [cite_start]**83% Setup Time Reduction:** Decreased initial setup from 30+ minutes to just 5 minutes[cite: 192].
-* [cite_start]**80% Command Reduction:** Streamlined 15+ manual terminal commands into 3 simple menu selections[cite: 192].
-* [cite_start]**Zero Technical Barrier:** Abstracted complex Git, DVC, and Google Drive interactions[cite: 192].
-* [cite_start]**Fully Automated PRs:** Implemented 1-command automated Pull Request creation directly from the terminal[cite: 65, 192].
-* [cite_start]**Significantly Reduced Error Rate:** Replaced manual typing with validated inputs[cite: 192].
+* **83% Setup Time Reduction:** Decreased initial setup from 30+ minutes to just 5 minutes.
+* **80% Command Reduction:** Streamlined 15+ manual terminal commands into 3 simple menu selections.
+* **Zero Technical Barrier:** Abstracted complex Git, DVC, and Google Drive interactions.
+* **Fully Automated PRs:** Implemented 1-command automated Pull Request creation directly from the terminal.
+* **Significantly Reduced Error Rate:** Replaced manual typing with validated inputs.
 
 ---
 
 ## 👩‍💻 Author
 
-[cite_start]**Alice Boccadifuoco** 
-* [cite_start]EURECOM - Semester Project (February 2026) 
+**Alice Boccadifuoco** 
+* EURECOM - Semester Project (February 2026) 
 * [[LinkedIn](https://it.linkedin.com/in/alice-boccadifuoco-557454217)]
 
 ---
